@@ -115,7 +115,23 @@ test.describe("axe sin violaciones serias", () => {
     expect(await axe(page)).toEqual([]);
   });
 
-  for (const path of ["/", "/usuarios", "/usuarios/permisos", "/perfil", "/solicitudes", "/__mocks"]) {
+  for (const path of [
+    "/",
+    "/usuarios",
+    "/usuarios/permisos",
+    "/perfil",
+    "/solicitudes",
+    "/solicitudes/a95bd787-dc58-5089-ad12-8b47afab9306",
+    "/bodegas",
+    "/bodegas/nueva",
+    "/bodegas/04de1441-989d-5c3e-b06f-033f3961d19d",
+    "/bodegas/04de1441-989d-5c3e-b06f-033f3961d19d?pestana=equipo",
+    "/bodegas/04de1441-989d-5c3e-b06f-033f3961d19d?pestana=historial",
+    "/configuracion",
+    "/configuracion/trazabilidad.singani.altitudMinimaMsnm",
+    "/bitacora",
+    "/__mocks",
+  ]) {
     test(`con sesión ${path}`, async ({ page }) => {
       const errors = trackErrors(page);
       await login(page, STAFF.superadmin);
@@ -151,4 +167,61 @@ test.describe("axe sin violaciones serias", () => {
     expect(await axe(page), "paleta").toEqual([]);
     expect(errors).toEqual([]);
   });
+
+  test("diálogos de 4B: aprobar, ajuste por bodega, persona y evento de la bitácora", async ({ page }) => {
+    const errors = trackErrors(page);
+    await login(page, STAFF.superadmin);
+
+    await page.goto("/solicitudes/ec224afe-19c4-5478-8f67-66f0d3fae8cf");
+    await settled(page);
+    await page.getByRole("button", { name: "Aprobar", exact: true }).click();
+    await expect(page.getByRole("dialog", { name: /^Aprobar/ })).toBeVisible();
+    await settled(page);
+    expect(await axe(page), "aprobar").toEqual([]);
+    await page.keyboard.press("Escape");
+
+    await page.goto("/configuracion/trazabilidad.singani.altitudMinimaMsnm");
+    await settled(page);
+    await page.getByRole("button", { name: "Añadir ajuste" }).click();
+    await expect(page.getByRole("dialog", { name: "Ajuste por bodega" })).toBeVisible();
+    await settled(page);
+    expect(await axe(page), "ajuste").toEqual([]);
+    await page.keyboard.press("Escape");
+
+    await page.goto("/bodegas/04de1441-989d-5c3e-b06f-033f3961d19d?pestana=equipo");
+    await settled(page);
+    await page.getByRole("button", { name: "Acciones de Rubén Flores" }).click();
+    await page.getByRole("menuitem", { name: "Ver la persona" }).click();
+    await expect(page.getByRole("dialog", { name: "Rubén Flores" })).toBeVisible();
+    await settled(page);
+    expect(await axe(page), "persona").toEqual([]);
+    expect(errors).toEqual([]);
+  });
 });
+
+test("bitácora y ficha con teclado: detalle del evento, Esc devuelve el foco; pestañas con flechas", async ({ page }) => {
+  await login(page, STAFF.admin);
+  await page.goto("/bitacora");
+  await settled(page);
+  const eye = page.getByRole("button", { name: /Ver el evento nº/ }).first();
+  await eye.focus();
+  await page.keyboard.press("Enter");
+  const panel = page.getByRole("dialog");
+  await expect(panel).toBeVisible();
+  await expect(panel.getByRole("heading", { name: "Cambios" })).toBeVisible();
+  await settled(page);
+  expect(await axe(page), "evento").toEqual([]);
+  await page.keyboard.press("Escape");
+  await expect(panel).toHaveCount(0);
+  await expect(eye).toBeFocused();
+  expect(await hasVisibleFocus(page)).toBe(true);
+
+  await page.goto("/bodegas/04de1441-989d-5c3e-b06f-033f3961d19d");
+  await settled(page);
+  await page.getByRole("tab", { name: "Perfil" }).focus();
+  await page.keyboard.press("ArrowRight");
+  await expect(page.getByRole("tab", { name: /Equipo/ })).toBeFocused();
+  await expect(page).toHaveURL(/pestana=equipo/);
+  await expect(page.getByRole("table", { name: /Miembros de/ })).toBeVisible();
+});
+
