@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useRef } from "react";
 import { Card, ErrorState, RoleMatrix, SkeletonText } from "@drinks-on-chain/ui";
 import { errorMessage } from "@/lib/api/errors";
 import { useMe } from "@/lib/auth/hooks";
@@ -27,19 +26,6 @@ export function PermissionMatrixView() {
   const me = useMe();
   const matrix = usePermissionMatrix();
   const mine = platformRole(me.data);
-  const wrapper = useRef<HTMLDivElement>(null);
-
-  // La tabla se desplaza en horizontal en pantallas estrechas: su contenedor debe poder recibir el
-  // foco para desplazarlo con el teclado (WCAG 2.1.1, axe «scrollable-region-focusable»).
-  // Pendiente de corregir en RoleMatrix (@drinks-on-chain/ui 0.3.0-rc.1).
-  useEffect(() => {
-    const scroller = wrapper.current?.querySelector<HTMLElement>(".overflow-x-auto");
-    if (!scroller) return;
-    scroller.tabIndex = 0;
-    scroller.classList.add("focus-visible:outline-2", "focus-visible:outline-offset-2", "focus-visible:outline-focus");
-    scroller.setAttribute("role", "region");
-    scroller.setAttribute("aria-label", "Matriz de permisos (desplazable)");
-  }, [matrix.data]);
 
   return (
     <div className="grid gap-5">
@@ -62,17 +48,15 @@ export function PermissionMatrixView() {
             retrying={matrix.isFetching}
           />
         ) : (
-          <div ref={wrapper}>
-            <RoleMatrix
-              className="[&_tbody_th]:min-w-56"
-              caption="Capacidades por rol"
-              density="compact"
-              highlightRole={mine ?? undefined}
-              capabilities={matrix.data.capabilities}
-              roles={ROLES.map((key) => ({ key, label: roleLabel(key) }))}
-              labels={{ capability: "Capacidad" }}
-            />
-          </div>
+          <RoleMatrix
+            className="[&_tbody_th]:min-w-56"
+            caption="Capacidades por rol"
+            density="compact"
+            highlightRole={mine ?? undefined}
+            capabilities={matrix.data.capabilities}
+            roles={ROLES.map((key) => ({ key, label: roleLabel(key) }))}
+            labels={{ capability: "Capacidad" }}
+          />
         )}
       </section>
     </div>

@@ -137,7 +137,10 @@ export const es = {
     session: "Sesión",
     inviteUser: "Invitar a un usuario interno",
     permissions: "Ver la matriz de permisos",
-    searchPlaceholder: "Buscar pantalla o acción…",
+    newWinery: "Nueva bodega (alta directa)",
+    goToApplication: "Ir a solicitud…",
+    goToApplicationHelp: "Escribe el nombre, el NIT o el contacto para buscarla",
+    searchPlaceholder: "Buscar pantalla, acción, solicitud o bodega…",
   },
   roles: {
     SUPERADMIN: "Superusuario",

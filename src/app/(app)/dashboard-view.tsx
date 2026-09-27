@@ -44,13 +44,29 @@ export function DashboardView() {
               loading={loading}
               loadingLabel="Cargando solicitudes"
               value={d ? fmtNumber(openApplications(d)) : "—"}
-              delta={d ? `${fmtNumber(d.applications.unverified)} sin verificar` : undefined}
+              delta={
+                d ? (
+                  <Link href="/solicitudes?estado=UNVERIFIED" className={kpiLink}>
+                    {fmtNumber(d.applications.unverified)} sin verificar
+                  </Link>
+                ) : undefined
+              }
               breakdown={
                 d
                   ? [
-                      { key: "received", label: "Recibidas", value: fmtNumber(d.applications.received) },
-                      { key: "inReview", label: "En revisión", value: fmtNumber(d.applications.inReview) },
-                      { key: "meeting", label: "Reunión", value: fmtNumber(d.applications.meetingScheduled) },
+                      breakdownLink("received", "Recibidas", d.applications.received, "/solicitudes?estado=RECEIVED"),
+                      breakdownLink(
+                        "inReview",
+                        "En revisión",
+                        d.applications.inReview,
+                        "/solicitudes?estado=IN_REVIEW",
+                      ),
+                      breakdownLink(
+                        "meeting",
+                        "Reunión",
+                        d.applications.meetingScheduled,
+                        "/solicitudes?estado=MEETING_SCHEDULED",
+                      ),
                     ]
                   : undefined
               }
@@ -66,13 +82,13 @@ export function DashboardView() {
               breakdown={
                 d
                   ? [
-                      { key: "invited", label: "Invitadas", value: fmtNumber(d.wineries.invited) },
-                      { key: "suspended", label: "Suspendidas", value: fmtNumber(d.wineries.suspended) },
+                      breakdownLink("invited", "Invitadas", d.wineries.invited, "/bodegas?estado=INVITED"),
+                      breakdownLink("suspended", "Suspendidas", d.wineries.suspended, "/bodegas?estado=SUSPENDED"),
                     ]
                   : undefined
               }
-              href="/bodegas"
-              linkLabel="Ver directorio"
+              href="/bodegas?estado=ACTIVE"
+              linkLabel="Ver bodegas activas"
               linkComponent={Link}
             />
             <KpiCard
@@ -83,8 +99,8 @@ export function DashboardView() {
               tone={d && d.invitations.expiringIn24h > 0 ? "warning" : "neutral"}
               delta={d ? expiringLabel(d.invitations.expiringIn24h) : undefined}
               trend={d && d.invitations.expiringIn24h > 0 ? "down" : "neutral"}
-              href={can(me.data, "users.read") ? "/usuarios?estado=INVITED" : undefined}
-              linkLabel="Ver invitaciones internas"
+              href={can(me.data, "users.read") ? "/usuarios?estado=INVITED" : "/bodegas?estado=INVITED"}
+              linkLabel={can(me.data, "users.read") ? "Ver invitaciones internas" : "Ver bodegas invitadas"}
               linkComponent={Link}
             />
             <KpiCard
@@ -93,6 +109,9 @@ export function DashboardView() {
               loadingLabel="Cargando equipo"
               value={d ? fmtNumber(d.team.blockedMembers) : "—"}
               delta="En bodegas y en la plataforma"
+              href="/bitacora?accion=MEMBER_BLOCKED"
+              linkLabel="Ver bloqueos en la bitácora"
+              linkComponent={Link}
             />
           </section>
 
@@ -124,6 +143,23 @@ export function DashboardView() {
       )}
     </div>
   );
+}
+
+const kpiLink =
+  "rounded-sm underline decoration-border-strong underline-offset-2 hover:decoration-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus";
+
+/** Cifra del desglose como enlace a la lista filtrada. */
+function breakdownLink(key: string, label: string, value: number, href: string) {
+  return {
+    key,
+    label,
+    value: (
+      <Link href={href} className={kpiLink}>
+        {fmtNumber(value)}
+        <span className="sr-only"> {label.toLowerCase()}: ver la lista</span>
+      </Link>
+    ),
+  };
 }
 
 const openApplications = (d: Dashboard) =>

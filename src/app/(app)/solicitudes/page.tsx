@@ -1,13 +1,15 @@
+import { Suspense } from "react";
 import type { Metadata } from "next";
-import { ComingSoon } from "@/components/coming-soon";
+import { SkeletonText } from "@drinks-on-chain/ui";
+import { ApplicationsView } from "./applications-view";
 
 export const metadata: Metadata = { title: "Solicitudes" };
 
-export default function Page() {
+// Los filtros viven en la URL (useSearchParams): el contenido se pinta en el cliente.
+export default function ApplicationsPage() {
   return (
-    <ComingSoon
-      title="Solicitudes"
-      description="Bandeja de solicitudes de alta: tomar, notas, reunión, aprobar o rechazar con motivo."
-    />
+    <Suspense fallback={<SkeletonText lines={6} />}>
+      <ApplicationsView />
+    </Suspense>
   );
 }

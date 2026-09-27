@@ -25,7 +25,9 @@ S3 · Back office de Drinks on Chain (`admin.`): herramienta del personal intern
 - Las pantallas nunca llaman a `fetch` ni conocen URLs: hooks de `src/lib/auth` y `src/lib/platform` sobre `src/lib/api`, validados con los esquemas de `@drinks-on-chain/mocks`.
 - Sesión del contrato de la Ola 0: acceso solo en memoria, renovación con la cookie `doc_rt`; nada de tokens en `sessionStorage`/`localStorage`. API en `/api/v1/*` del propio origen (reescritura a `API_ORIGIN`).
 - Segundo factor: `src/lib/auth/login-flow.ts` (máquina de estados pura) y `src/components/auth/mfa-steps.tsx` (verificar, inscribir con QR y `SecretReveal`, códigos de recuperación una sola vez). Lo usan el login y la aceptación de invitaciones.
-- Listas con `limit` ≤ 100; errores de formulario con `fieldErrorsFrom()`; cifras y fechas con `src/lib/format.ts`; textos en `src/lib/i18n/es.ts` y códigos de la bitácora en `src/lib/platform/labels.ts`.
+- Listas con filtros y página en la URL (`useUrlParams` de `src/lib/use-url-params.ts`, `?pagina=`) y `limit` ≤ 100; errores de formulario con `fieldErrorsFrom()`; cifras y fechas con `src/lib/format.ts`; textos en `src/lib/i18n/es.ts` y códigos de la bitácora en `src/lib/platform/labels.ts`.
+- Acciones con motivo sobre terceros con `ReasonActionDialog` (`src/components/reason-action-dialog.tsx`); tarjetas con encabezado real con `SectionHeader`.
+- Lo que el contrato aún no expone al back office se deriva de la bitácora en `src/lib/platform/derive.ts` (invitaciones de una bodega, estado de la cuenta completa); se sustituye cuando llegue la ruta.
 - Componentes de `@drinks-on-chain/ui`; si falta uno reutilizable, se añade allí. Los arreglos locales a componentes del paquete se marcan con "Pendiente de corregir en …".
 - Módulos de otras olas ocultos con `NEXT_PUBLIC_FLAG_*` (`src/lib/navigation.tsx`).
 - E2E contra los mocks: el TOTP se genera con `generateTotp(DEMO_TOTP_SECRET)` (nunca el atajo `000000`); los correos se leen en el buzón simulado de `/__mocks`.

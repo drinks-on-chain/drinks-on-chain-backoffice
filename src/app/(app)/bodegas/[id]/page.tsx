@@ -1,13 +1,16 @@
+import { Suspense } from "react";
 import type { Metadata } from "next";
-import { ComingSoon } from "@/components/coming-soon";
+import { SkeletonText } from "@drinks-on-chain/ui";
+import { WineryDetailView } from "./winery-detail";
 
 export const metadata: Metadata = { title: "Bodega" };
 
-export default function Page() {
+// La pestaña activa vive en la URL (?pestana=equipo): el contenido se pinta en el cliente.
+export default async function WineryPage({ params }: PageProps<"/bodegas/[id]">) {
+  const { id } = await params;
   return (
-    <ComingSoon
-      title="Bodega"
-      description="Ficha de la bodega: estado, historial, equipo, suspender, reactivar, revocar y transferir."
-    />
+    <Suspense fallback={<SkeletonText lines={8} />}>
+      <WineryDetailView id={id} />
+    </Suspense>
   );
 }

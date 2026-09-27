@@ -1,13 +1,15 @@
+import { Suspense } from "react";
 import type { Metadata } from "next";
-import { ComingSoon } from "@/components/coming-soon";
+import { SkeletonText } from "@drinks-on-chain/ui";
+import { AuditView } from "./audit-view";
 
 export const metadata: Metadata = { title: "Bitácora" };
 
-export default function Page() {
+// Los filtros viven en la URL (useSearchParams): el contenido se pinta en el cliente.
+export default function AuditPage() {
   return (
-    <ComingSoon
-      title="Bitácora"
-      description="Bitácora completa con filtros, exportación a CSV y verificación de la cadena de hashes."
-    />
+    <Suspense fallback={<SkeletonText lines={8} />}>
+      <AuditView />
+    </Suspense>
   );
 }

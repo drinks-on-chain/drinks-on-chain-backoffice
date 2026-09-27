@@ -2,6 +2,8 @@ import type { ReactElement } from "react";
 import { render } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { vi } from "vitest";
+import type { MeResponse, PlatformRole } from "@drinks-on-chain/mocks";
+import { meQueryKey } from "@/lib/auth/hooks";
 
 /** Respuesta de éxito del envoltorio del backend. */
 export const ok = (data: unknown, status = 200) =>
@@ -27,9 +29,39 @@ export function stubFetch() {
   return fetchMock;
 }
 
-export function renderWithQuery(ui: ReactElement) {
+/** Renderiza con React Query; `me` precarga la sesión (`GET /v1/users/me`) para `can()`. */
+export function renderWithQuery(ui: ReactElement, { me }: { me?: MeResponse } = {}) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
+  if (me) {
+    // La sesión precargada no se vuelve a pedir al montar.
+    client.setQueryDefaults(meQueryKey, { staleTime: Infinity });
+    client.setQueryData(meQueryKey, me);
+  }
   return render(<QueryClientProvider client={client}>{ui}</QueryClientProvider>);
+}
+
+/** Persona de plataforma con la plataforma como organización activa. */
+export function staffMe(role: PlatformRole): MeResponse {
+  return {
+    user: {
+      id: `u-${role.toLowerCase()}`,
+      email: `${role.toLowerCase()}@drinksonchain.test`,
+      fullName: role,
+      audience: "STAFF",
+    },
+    memberships: [
+      {
+        id: "m-platform",
+        organizationId: "platform",
+        organizationType: "PLATFORM",
+        organizationName: "Drinks on Chain",
+        organizationStatus: "ACTIVE",
+        role,
+        status: "ACTIVE",
+      },
+    ],
+    activeOrganizationId: "platform",
+  } as unknown as MeResponse;
 }
 
 /** `next/navigation` mínimo para componentes cliente en jsdom. */

@@ -80,3 +80,60 @@ export function auditActorLabel(actor: AuditEvent["actor"]): string {
   if (!actor.fullName) return "Sistema";
   return actor.viaPlatform && actor.role ? `${actor.fullName} · ${roleLabel(actor.role)}` : actor.fullName;
 }
+
+/** Códigos de la bitácora conocidos (para el filtro de acción), ordenados por su texto. */
+export const auditActionOptions = () =>
+  Object.entries(AUDIT_ACTIONS)
+    .map(([value, label]) => ({ value, label }))
+    .sort((a, b) => a.label.localeCompare(b.label, "es"));
+
+export const CATEGORY_LABELS: Record<string, string> = {
+  WINERY: "Bodega de vino",
+  DISTILLERY: "Destilería",
+  BREWERY: "Cervecería",
+  OTHER: "Otra",
+};
+export const categoryLabel = (c: string) => CATEGORY_LABELS[c] ?? c;
+
+export const MEETING_CHANNEL_LABELS: Record<string, string> = {
+  CALL: "Llamada",
+  VIDEO: "Videollamada",
+  IN_PERSON: "En persona",
+};
+export const meetingChannelLabel = (c: string) => MEETING_CHANNEL_LABELS[c] ?? c;
+
+/** Tipos de recurso de la bitácora. */
+export const RESOURCE_TYPE_LABELS: Record<string, string> = {
+  WINERY: "Bodega",
+  WINERY_APPLICATION: "Solicitud",
+  MEMBERSHIP: "Membresía",
+  INVITATION: "Invitación",
+  USER: "Persona",
+  SETTING: "Parámetro",
+  TERROIR: "Parcela",
+  HARVEST_BATCH: "Vendimia",
+  FERMENTATION_TANK: "Cuba",
+  ENOLOGICAL_TREATMENT: "Tratamiento enológico",
+  WINE_AGING: "Crianza",
+  PRODUCTION_BATCH: "Destilación",
+  BOTTLING_BATCH: "Embotellado",
+  LAB_ANALYSIS: "Análisis de laboratorio",
+};
+export const resourceTypeLabel = (t: string) => RESOURCE_TYPE_LABELS[t] ?? auditActionLabel(t);
+
+export const CLIENT_APP_LABELS: Record<string, string> = {
+  ERP: "ERP",
+  MARKETPLACE: "Marketplace",
+  BACKOFFICE: "Back office",
+  POS: "POS",
+  PUBLIC: "Público",
+  API: "API",
+  WORKER: "Sistema",
+};
+export const clientAppLabel = (a: string) => CLIENT_APP_LABELS[a] ?? a;
+
+/** Qué pasa con el dueño anterior al transferir la titularidad. */
+export const PREVIOUS_OWNER_LABELS = {
+  BLOCKED: "Queda bloqueado en la bodega",
+  ENOLOGIST: "Sigue en el equipo como enólogo",
+} as const;

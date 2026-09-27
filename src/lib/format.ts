@@ -77,3 +77,23 @@ export function fmtRelative(iso: string, now: number = Date.now()): string {
   if (days < 7) return `hace ${days} días`;
   return fmtDate(iso);
 }
+
+/** Fecha y hora en la zona horaria de quien mira (reuniones agendadas): "3 oct 2026, 10:30". */
+export const fmtLocalDateTime = (iso: string) =>
+  new Intl.DateTimeFormat(LOCALE, {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  })
+    .format(new Date(iso))
+    .replace(".", "");
+
+/** Valor de un `<input type="datetime-local">` ("2026-10-03T10:30", hora local) → ISO en UTC. */
+export function localInputToIso(local: string): string | null {
+  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?$/.test(local)) return null;
+  const ms = new Date(local).getTime();
+  return Number.isFinite(ms) ? new Date(ms).toISOString() : null;
+}

@@ -42,12 +42,17 @@ Sub-etapas 4A–4F de `docs-front/03-roadmap-frontend.md` v3 §8, ordenadas por 
 
 ## 4B · Solicitudes, bodegas y equipo (O1-BO-2, Ola 1)
 
-- [ ] Bandeja de solicitudes (tomar, notas, reunión, aprobar, rechazar con motivo) y detalle
-- [ ] Alta directa de bodega con invitación al dueño
-- [ ] Directorio y ficha de bodega (estado, historial, suspender, reactivar, revocar, transferir)
-- [ ] Equipo de cualquier bodega (invitar, rol, bloquear) y bloqueo de cuenta completa (`/v1/platform/accounts/{userId}`)
-- [ ] Configuración general y por bodega (masivo, historial, excepción legal)
-- [ ] Bitácora con filtros, exportación CSV y verificación de la cadena
+- [x] Bandeja de solicitudes (filtros de estado, asignada y búsqueda en la URL, paginación) y detalle: tomar, notas, agendar reunión, reunión hecha, aprobar (dueño por defecto el contacto, editable) y rechazar con motivo; historial desde la bitácora; enlaces a la bodega creada y a la invitación · 2026-09-27
+- [x] Alta directa de bodega con invitación al dueño (validación en el cliente y `details` por campo; `ORG_TAX_ID_TAKEN` en el NIT) · 2026-09-27
+- [x] Directorio (estado, región, categoría, búsqueda, paginación) y ficha de bodega: perfil editable con motivo, estado, `lotPrefix`, dueño, historial (`Timeline`), suspender, reactivar, revocar (ADMIN) y transferir la titularidad (ADMIN, qué pasa con el dueño anterior) · 2026-09-27
+- [x] Equipo de cualquier bodega: miembros con quién bloqueó, invitaciones pendientes (reenviar, anular), invitar, rol, bloquear/desbloquear con motivo, enlace de contraseña y, desde la persona, bloqueo de la cuenta completa (`/v1/platform/accounts/{userId}`, ADMIN) · 2026-09-27
+- [x] Configuración agrupada por prefijo; estándar general con editor según el tipo (número con unidad, sí/no, lista, enumeración, número o ilimitado, JSON validado); ajustes por bodega a una selección (`Combobox` múltiple) o a todas, excepción al mínimo legal (ADMIN) con aviso, volver al estándar (masivo), historial; `SETTING_BELOW_LEGAL_MINIMUM` / `SETTING_LEVEL_NOT_ALLOWED` en el campo · 2026-09-27
+- [x] Bitácora: tabla densa con filtros en la URL (fechas, persona, organización, acción, recurso), detalle en `SlideOver` con antes/después, exportación CSV, verificación de la cadena (ADMIN) y enlaces desde las fichas · 2026-09-27
+- [x] Tablero: los KPI y su desglose enlazan con las listas filtradas · 2026-09-27
+- [x] ⌘K: "Nueva bodega", "Ir a solicitud…" y búsqueda de solicitudes y bodegas en el servidor · 2026-09-27
+- [x] `@drinks-on-chain/ui` 0.3.0-rc.2 (foco de diálogos encadenados y `RoleMatrix` desplazable): fuera los parches locales · 2026-09-27
+- [ ] Invitaciones de una bodega con `GET /v1/platform/organizations/{id}/invitations` cuando el contrato la añada (hoy se reconstruyen con los eventos `INVITATION_*` de la bitácora) y estado de la cuenta completa con una lectura propia (hoy, último `USER_BLOCKED`/`USER_UNBLOCKED`)
+- [ ] Contra el backend de desarrollo cuando publique la Etapa 1 (O1-BE-1)
 
 ## 4C · Tokenización (Ola 3)
 
@@ -64,4 +69,5 @@ Sub-etapas 4A–4F de `docs-front/03-roadmap-frontend.md` v3 §8, ordenadas por 
 ## 4E · Calidad (cada ola)
 
 - [x] Ola 1 · 4A: teclado completo, paginación (`limit` ≤ 100) y ordenación en la tabla de usuarios, Playwright del recorrido · 2026-09-27
-- [ ] Ola 1 · 4B y recorrido H1 con el repo `drinks-on-chain-e2e`
+- [x] Ola 1 · 4B: filtros y página en la URL, paginación (`limit` ≤ 100) y ordenación en todas las listas; Playwright con mocks: solicitud tomar → reunión → aprobar → correo del buzón → aceptar → bodega activa con prefijo, rechazo, alta directa, suspender y verlo en la bitácora, bloquear miembro y cuenta completa, mínimo legal (rechazo y excepción), CSV, verificación de la cadena, soporte sin escritura; axe en todas las pantallas y diálogos nuevos; teclado (detalle de la bitácora, pestañas, ⌘K) · 2026-09-27
+- [ ] Recorrido H1 con el repo `drinks-on-chain-e2e`

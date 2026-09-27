@@ -1,13 +1,15 @@
+import { Suspense } from "react";
 import type { Metadata } from "next";
-import { ComingSoon } from "@/components/coming-soon";
+import { SkeletonText } from "@drinks-on-chain/ui";
+import { WineriesView } from "./wineries-view";
 
 export const metadata: Metadata = { title: "Bodegas" };
 
-export default function Page() {
+// Los filtros viven en la URL (useSearchParams): el contenido se pinta en el cliente.
+export default function WineriesPage() {
   return (
-    <ComingSoon
-      title="Bodegas"
-      description="Directorio de bodegas con filtros, alta directa y ficha con su estado e historial."
-    />
+    <Suspense fallback={<SkeletonText lines={6} />}>
+      <WineriesView />
+    </Suspense>
   );
 }
