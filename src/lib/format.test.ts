@@ -3,6 +3,7 @@ import {
   fmtDate,
   fmtDateTime,
   fmtDaysLeft,
+  fmtRelative,
   fmtKg,
   fmtLiters,
   fmtNumber,
@@ -70,6 +71,7 @@ describe("formato es-BO", () => {
     const dt = fmtDateTime("2026-03-04T09:05:00Z");
     expect(dt.startsWith("4 mar 2026")).toBe(true);
     expect(dt).toContain("09:05");
+    expect(fmtDateTime("2026-09-28T13:01:00Z")).toBe("28 sept 2026, 13:01");
   });
 
   it("días restantes y hashes abreviados", () => {
@@ -78,5 +80,18 @@ describe("formato es-BO", () => {
     expect(fmtDaysLeft(18)).toBe("Faltan 18 días");
     expect(shortHash("GDQ4ABCDEFGH7KXV")).toBe("GDQ4…7KXV");
     expect(shortHash("GDQ4")).toBe("GDQ4");
+  });
+});
+
+describe("fmtRelative", () => {
+  const now = Date.parse("2026-09-27T12:00:00Z");
+  it("usa minutos, horas, ayer y días; después la fecha", () => {
+    expect(fmtRelative("2026-09-27T11:59:50Z", now)).toBe("ahora");
+    expect(fmtRelative("2026-09-27T11:48:00Z", now)).toBe("hace 12 min");
+    expect(fmtRelative("2026-09-27T09:00:00Z", now)).toBe("hace 3 h");
+    expect(fmtRelative("2026-09-26T10:00:00Z", now)).toBe("ayer");
+    expect(fmtRelative("2026-09-23T12:00:00Z", now)).toBe("hace 4 días");
+    expect(fmtRelative("2026-09-01T12:00:00Z", now)).toBe("1 sept 2026");
+    expect(fmtRelative("no es fecha", now)).toBe("—");
   });
 });
