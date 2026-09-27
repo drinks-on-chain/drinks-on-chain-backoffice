@@ -23,7 +23,7 @@ S3 · Back office de Drinks on Chain (`admin.`): herramienta del personal intern
 ## Código
 
 - Las pantallas nunca llaman a `fetch` ni conocen URLs: hooks de `src/lib/auth` y `src/lib/platform` sobre `src/lib/api`, validados con los esquemas de `@drinks-on-chain/mocks`.
-- Sesión del contrato de la Ola 0: acceso solo en memoria, renovación con la cookie `doc_rt`; nada de tokens en `sessionStorage`/`localStorage`. API en `/api/v1/*` del propio origen (reescritura a `API_ORIGIN`).
+- Sesión del contrato de la Ola 0: acceso solo en memoria, renovación con la cookie `doc_rt`; nada de tokens en `sessionStorage`/`localStorage`. API en `/api/v1/*` del propio origen (`src/proxy.ts` la reescribe a `API_ORIGIN` con la IP del cliente firmada con `PROXY_SHARED_SECRET`).
 - Segundo factor: `src/lib/auth/login-flow.ts` (máquina de estados pura) y `src/components/auth/mfa-steps.tsx` (verificar, inscribir con QR y `SecretReveal`, códigos de recuperación una sola vez). Lo usan el login y la aceptación de invitaciones.
 - Listas con filtros y página en la URL (`useUrlParams` de `src/lib/use-url-params.ts`, `?pagina=`) y `limit` ≤ 100; errores de formulario con `fieldErrorsFrom()`; cifras y fechas con `src/lib/format.ts`; textos en `src/lib/i18n/es.ts` y códigos de la bitácora en `src/lib/platform/labels.ts`.
 - Acciones con motivo sobre terceros con `ReasonActionDialog` (`src/components/reason-action-dialog.tsx`); tarjetas con encabezado real con `SectionHeader`.
