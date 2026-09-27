@@ -1,10 +1,9 @@
 import type { Metadata } from "next";
-import { ComingSoon } from "@/components/coming-soon";
+import { ApplicationDetail } from "./application-detail";
 
 export const metadata: Metadata = { title: "Solicitud" };
 
-export default function Page() {
-  return (
-    <ComingSoon title="Solicitud" description="Detalle de la solicitud con sus notas, la reunión y la decisión." />
-  );
+export default async function ApplicationPage({ params }: PageProps<"/solicitudes/[id]">) {
+  const { id } = await params;
+  return <ApplicationDetail id={id} />;
 }
