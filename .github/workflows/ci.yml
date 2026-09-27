@@ -5,6 +5,12 @@ on:
     branches: [dev, main]
   pull_request:
     branches: [dev, main]
+  workflow_dispatch:
+    inputs:
+      api_origin:
+        description: Origen del backend de desarrollo
+        default: https://136.243.223.39.sslip.io
+        required: true
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -47,3 +53,26 @@ jobs:
           name: playwright-report
           path: playwright-report
           retention-days: 7
+
+  # Recorrido contra el backend real de desarrollo (O1-BO-1/2): solo a mano, con los secretos del
+  # repo. Sin E2E_MAILPIT_URL (Mailpit solo escucha en el servidor) se saltan los pasos que leen
+  # correos. Sin artefactos: las trazas y capturas podrían contener datos de las cuentas de demo.
+  e2e-backend-real:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm e2e
+        env:
+          E2E_REAL_API: "1"
+          E2E_API_ORIGIN: ${{ inputs.api_origin }}
+          E2E_PASSWORD: ${{ secrets.E2E_PASSWORD }}
+          E2E_TOTP_SECRET: ${{ secrets.E2E_TOTP_SECRET }}
+          E2E_MAILPIT_URL: ${{ secrets.E2E_MAILPIT_URL }}
