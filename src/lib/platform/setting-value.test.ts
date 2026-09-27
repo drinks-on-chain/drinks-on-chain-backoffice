@@ -34,6 +34,7 @@ const maxBottles: SettingShape = {
   unit: "botellas",
   min: 1,
   max: 1000,
+  legalMinimum: null,
 };
 const reminder: SettingShape = {
   key: "campanas.recordatorioResena.dias",
@@ -42,15 +43,27 @@ const reminder: SettingShape = {
   unit: "días",
   min: 1,
   max: 90,
+  legalMinimum: null,
 };
 const action: SettingShape = {
   key: "canje.ventanaVencida.accion",
   description: "Qué pasa con un NFT cuando vence su ventana",
   type: "ENUM",
   enumValues: ["BURN", "EXTEND", "COMPENSATE"],
+  legalMinimum: null,
 };
-const flag: SettingShape = { key: "tokenizacion.requiereAprobacion", description: "Aprobación", type: "BOOLEAN" };
-const limits: SettingShape = { key: "trazabilidad.laboratorio.limites", description: "Límites", type: "OBJECT" };
+const flag: SettingShape = {
+  key: "tokenizacion.requiereAprobacion",
+  description: "Aprobación",
+  type: "BOOLEAN",
+  legalMinimum: null,
+};
+const limits: SettingShape = {
+  key: "trazabilidad.laboratorio.limites",
+  description: "Límites",
+  type: "OBJECT",
+  legalMinimum: null,
+};
 
 describe("número con unidad", () => {
   it("lee cifras es-BO (coma decimal, punto de miles) y valida el rango", () => {
