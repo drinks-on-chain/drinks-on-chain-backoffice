@@ -4,7 +4,7 @@ import type { AuditEvent } from "@drinks-on-chain/mocks";
 import { KeyValueList, SlideOver } from "@drinks-on-chain/ui";
 import { SectionHeader } from "@/components/section-header";
 import { fmtDateTime } from "@/lib/format";
-import { auditDiff, formatAuditValue } from "@/lib/platform/derive";
+import { auditDiff, formatAuditValue } from "@/lib/platform/audit-diff";
 import { auditActionLabel, clientAppLabel, resourceTypeLabel, roleLabel } from "@/lib/platform/labels";
 
 const mono = (v: string | null) => (v ? <span className="font-mono text-xs break-all">{v}</span> : "—");
