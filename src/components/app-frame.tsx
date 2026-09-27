@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, type ReactNode } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { ExternalLink, KeyRound, LogOut, UserPlus, UserRound } from "lucide-react";
+import { Building2, ExternalLink, Inbox, KeyRound, LogOut, UserPlus, UserRound } from "lucide-react";
 import type { MeResponse } from "@drinks-on-chain/mocks";
 import {
   AdminShell,
@@ -20,6 +20,7 @@ import { activeMembership } from "@/lib/auth/organization";
 import { es } from "@/lib/i18n/es";
 import { links } from "@/lib/links";
 import { navItems, navigation, permissionsIcon } from "@/lib/navigation";
+import { usePaletteSearch } from "./palette-search";
 import { roleLabel } from "@/lib/platform/labels";
 import {
   can,
@@ -163,6 +164,7 @@ function Shell({ me, children }: { me: MeResponse; children: ReactNode }) {
   const groups = useMemo(() => navigation(), []);
   const active = activeMembership(me);
   const erp = wineryMemberships(me).length > 0 ? links.erp : null;
+  const search = usePaletteSearch(me);
 
   const signOut = async () => {
     await logout();
@@ -170,6 +172,7 @@ function Shell({ me, children }: { me: MeResponse; children: ReactNode }) {
   };
 
   const palette: CommandPaletteGroup[] = [
+    ...search.groups,
     {
       heading: es.palette.navigation,
       items: [
@@ -199,6 +202,29 @@ function Shell({ me, children }: { me: MeResponse; children: ReactNode }) {
     {
       heading: es.palette.actions,
       items: [
+        ...(can(me, "wineries.create")
+          ? [
+              {
+                id: "action:new-winery",
+                label: es.palette.newWinery,
+                icon: <Building2 aria-hidden="true" className="size-4" />,
+                keywords: ["alta", "directa", "crear", "bodega"],
+                onSelect: () => router.push("/bodegas/nueva"),
+              },
+            ]
+          : []),
+        ...(can(me, "applications.read")
+          ? [
+              {
+                id: "action:go-application",
+                label: es.palette.goToApplication,
+                description: es.palette.goToApplicationHelp,
+                icon: <Inbox aria-hidden="true" className="size-4" />,
+                keywords: ["solicitud", "buscar", "bandeja", "alta"],
+                onSelect: () => router.push("/solicitudes"),
+              },
+            ]
+          : []),
         ...(can(me, "users.invite")
           ? [
               {
@@ -260,9 +286,12 @@ function Shell({ me, children }: { me: MeResponse; children: ReactNode }) {
           { type: "separator" },
           { label: es.auth.logout, onSelect: () => void signOut() },
         ]}
-        search={{ placeholder: "Buscar pantalla o acción…" }}
+        search={{ placeholder: "Buscar pantalla, solicitud o bodega…" }}
         commandPalette={{
           groups: palette,
+          onQueryChange: search.onQueryChange,
+          loading: search.loading,
+          filter: search.filter,
           placeholder: es.palette.searchPlaceholder,
           labels: { title: "Paleta de comandos", input: "Buscar pantalla o acción" },
         }}
