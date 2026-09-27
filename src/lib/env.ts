@@ -7,6 +7,14 @@ const schema = z.object({
   urlLanding: z.string().url().or(z.literal("")),
   urlBodegas: z.string().url().or(z.literal("")),
   urlApp: z.string().url().or(z.literal("")),
+  urlErp: z.string().url().or(z.literal("")),
+  turnstileSiteKey: z.string(),
+  flags: z.object({
+    tokenization: z.boolean(),
+    pickupPoints: z.boolean(),
+    support: z.boolean(),
+    orders: z.boolean(),
+  }),
 });
 
 export const env = schema.parse({
@@ -14,6 +22,15 @@ export const env = schema.parse({
   urlLanding: process.env.NEXT_PUBLIC_URL_LANDING ?? "",
   urlBodegas: process.env.NEXT_PUBLIC_URL_BODEGAS ?? "",
   urlApp: process.env.NEXT_PUBLIC_URL_APP ?? "",
+  urlErp: process.env.NEXT_PUBLIC_URL_ERP ?? "",
+  turnstileSiteKey: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? "",
+  // Módulos de otras olas (4C, 4D, 4F): ocultos en el menú hasta que existan (plan/03 §1).
+  flags: {
+    tokenization: process.env.NEXT_PUBLIC_FLAG_TOKENIZATION === "1",
+    pickupPoints: process.env.NEXT_PUBLIC_FLAG_PICKUP_POINTS === "1",
+    support: process.env.NEXT_PUBLIC_FLAG_SUPPORT === "1",
+    orders: process.env.NEXT_PUBLIC_FLAG_ORDERS === "1",
+  },
 });
 
 /** Las herramientas de desarrollo (/__mocks) existen en local y en demos con mocks. */
