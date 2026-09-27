@@ -14,7 +14,7 @@ import {
   type UpdateUserDto,
 } from "@drinks-on-chain/mocks";
 import { api, logoutSession } from "@/lib/api/client";
-import { clearSession, setSession } from "@/lib/api/session";
+import { clearSession, getLegacyRefreshToken, setSession } from "@/lib/api/session";
 
 // Sesión, segundo factor, recuperación, invitaciones y perfil (contratos de la Ola 0 §5 y de la
 // Ola 1 §1–§2). Las pantallas usan los hooks de hooks.ts.
@@ -82,11 +82,16 @@ export async function logoutAll() {
   }
 }
 
-/** `POST /v1/auth/switch-organization`: tokens nuevos de la misma sesión con otra organización activa. */
+/**
+ * `POST /v1/auth/switch-organization`: tokens nuevos de la misma sesión con otra organización
+ * activa. Exige el refresco de la sesión (backend O0-BE-4): viaja en la cookie `doc_rt`; mientras
+ * dure la tolerancia al refresco en el cuerpo (*retirada* en H1), también se envía ahí.
+ */
 export async function switchOrganization(organizationId: string) {
+  const refreshToken = getLegacyRefreshToken();
   const res = await api("/v1/auth/switch-organization", {
     method: "POST",
-    body: { organizationId },
+    body: refreshToken ? { organizationId, refreshToken } : { organizationId },
     schema: SessionResponseSchema,
   });
   applySession(res);

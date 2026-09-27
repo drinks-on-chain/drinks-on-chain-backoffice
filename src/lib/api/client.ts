@@ -96,6 +96,9 @@ async function parseError(res: Response, path: string): Promise<ApiError> {
     // Cuerpo vacío o no JSON.
   }
   const parsed = errorEnvelope.safeParse(json);
+  // 429: el backend indica la espera en segundos (`Retry-After`).
+  const retry = Number(res.headers.get("Retry-After"));
+  const retryAfter = Number.isFinite(retry) && retry > 0 ? retry : null;
   if (parsed.success) {
     const { error, statusCode, path: p } = parsed.data;
     return new ApiError({
@@ -104,9 +107,16 @@ async function parseError(res: Response, path: string): Promise<ApiError> {
       message: error.message,
       details: error.details,
       path: p,
+      retryAfter,
     });
   }
-  return new ApiError({ status: res.status, code: `HTTP_${res.status}`, message: res.statusText || "Error", path });
+  return new ApiError({
+    status: res.status,
+    code: `HTTP_${res.status}`,
+    message: res.statusText || "Error",
+    path,
+    retryAfter,
+  });
 }
 
 // ---------------------------------------------------------------------------

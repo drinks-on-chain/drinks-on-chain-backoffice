@@ -63,6 +63,15 @@ describe("LoginFlow", () => {
     expect(screen.getByText("El correo no es válido")).toBeInTheDocument();
   });
 
+  it("tras 5 fallos (429) muestra cuánto esperar", async () => {
+    const locked = fail(429, "AUTH_TOO_MANY_ATTEMPTS", "Demasiados intentos");
+    locked.headers.set("Retry-After", "300");
+    respond("/auth/login", locked);
+    renderWithQuery(<LoginFlow />);
+    await enterCredentials();
+    expect(await screen.findByText("Demasiados intentos. Espera 5 minutos y vuelve a intentarlo.")).toBeInTheDocument();
+  });
+
   it("con TOTP inscrito: pide el código, marca uno incorrecto y entra con el correcto", async () => {
     respond("/auth/login", ok(challenge(true)));
     renderWithQuery(<LoginFlow />);

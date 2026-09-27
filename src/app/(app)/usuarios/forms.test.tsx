@@ -113,7 +113,7 @@ describe("acciones con motivo sobre un usuario interno", () => {
         { field: "reason", message: "El motivo es demasiado genérico" },
       ]),
     );
-    fetchMock.mockResolvedValueOnce(fail(403, "FORBIDDEN", "Requiere rol ADMIN"));
+    fetchMock.mockResolvedValueOnce(fail(403, "AUTH_INSUFFICIENT_PERMISSIONS", "Requiere rol ADMIN"));
     renderWithQuery(<UserActionDialog dialog={{ kind: "block", user }} onClose={() => {}} />);
 
     await userEvent.type(screen.getByLabelText(/Motivo/), "porque sí");

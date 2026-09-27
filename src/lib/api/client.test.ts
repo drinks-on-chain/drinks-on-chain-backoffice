@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { z } from "zod";
 import { api, bootstrapSession, logoutSession, setSessionEndedHandler } from "./client";
-import { ApiError, ContractError, NetworkError } from "./errors";
+import { ApiError, ContractError, NetworkError, errorMessage } from "./errors";
 import { toPage } from "./envelope";
 import { fetchAllPages } from "./pagination";
 import {
@@ -84,6 +84,17 @@ describe("api", () => {
     for (const call of calls()) {
       expect((call.init.headers as Record<string, string>)["X-Client-App"]).toBe("BACKOFFICE");
     }
+  });
+
+  it("un 429 lleva la espera de Retry-After y un mensaje con ella", async () => {
+    clearSession();
+    const res = fail(429, "AUTH_TOO_MANY_ATTEMPTS", "Demasiados intentos");
+    res.headers.set("Retry-After", "120");
+    fetchMock.mockResolvedValueOnce(res);
+    const error = await api("/v1/auth/login", { method: "POST", auth: false }).catch((e: unknown) => e);
+    expect(error).toBeInstanceOf(ApiError);
+    expect((error as ApiError).retryAfter).toBe(120);
+    expect(errorMessage(error)).toBe("Demasiados intentos. Espera 2 minutos y vuelve a intentarlo.");
   });
 
   it("convierte el envoltorio de error en ApiError con sus details", async () => {

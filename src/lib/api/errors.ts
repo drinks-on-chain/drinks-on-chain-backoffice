@@ -4,14 +4,24 @@ export class ApiError extends Error {
   readonly code: string;
   readonly details: unknown;
   readonly path: string | undefined;
+  /** Segundos de espera de un 429 (cabecera `Retry-After`), si llegó. */
+  readonly retryAfter: number | null;
 
-  constructor(opts: { status: number; code: string; message: string; details?: unknown; path?: string }) {
+  constructor(opts: {
+    status: number;
+    code: string;
+    message: string;
+    details?: unknown;
+    path?: string;
+    retryAfter?: number | null;
+  }) {
     super(opts.message);
     this.name = "ApiError";
     this.status = opts.status;
     this.code = opts.code;
     this.details = opts.details;
     this.path = opts.path;
+    this.retryAfter = opts.retryAfter ?? null;
   }
 
   get isUnauthorized() {
@@ -22,6 +32,9 @@ export class ApiError extends Error {
   }
   get isNotFound() {
     return this.status === 404;
+  }
+  get isTooManyRequests() {
+    return this.status === 429;
   }
   /** 400/422: datos inválidos o regla de negocio (candado, D.O., …). */
   get isValidation() {
@@ -47,10 +60,22 @@ export class ContractError extends Error {
   }
 }
 
+/** "1 minuto", "5 minutos", "30 segundos": la espera de un 429 para mostrarla. */
+export function waitLabel(seconds: number): string {
+  if (seconds < 60) return seconds === 1 ? "1 segundo" : `${seconds} segundos`;
+  const minutes = Math.ceil(seconds / 60);
+  return minutes === 1 ? "1 minuto" : `${minutes} minutos`;
+}
+
 /** Mensaje para la persona usuaria, en español, a partir de cualquier error. */
 export function errorMessage(error: unknown): string {
   if (error instanceof ApiError) {
     if (error.status >= 500) return "El servidor tuvo un problema. Inténtalo de nuevo en unos minutos.";
+    if (error.isTooManyRequests) {
+      return error.retryAfter
+        ? `Demasiados intentos. Espera ${waitLabel(error.retryAfter)} y vuelve a intentarlo.`
+        : "Demasiados intentos. Espera unos minutos y vuelve a intentarlo.";
+    }
     if (error.code === "AUTH_MFA_REQUIRED") {
       return "Falta el segundo factor en esta sesión: vuelve a entrar para verificarla.";
     }
