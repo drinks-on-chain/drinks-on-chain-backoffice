@@ -2,19 +2,22 @@
 
 **S3 · Back office de Drinks on Chain** (`admin.`): la herramienta del personal interno para dar de alta y gestionar bodegas, usuarios internos, configuración y bitácora. Nace de [`drinks-on-chain-app-template`](https://github.com/drinks-on-chain/drinks-on-chain-app-template) (Next.js 16, `@drinks-on-chain/ui`, `@drinks-on-chain/mocks`). Planificación en [drinks-on-chain-docsfront](https://github.com/drinks-on-chain/drinks-on-chain-docsfront) (`03` §8, `05` §5) y en el contrato de la Ola 1 del plan maestro.
 
-## Qué hay (4A)
+## Qué hay (4A y 4B)
 
-| Pantalla                                                                         | Ruta                                                      | Contrato              |
-| -------------------------------------------------------------------------------- | --------------------------------------------------------- | --------------------- |
-| Entrar con segundo factor (verificar, inscribir con QR, códigos de recuperación) | `/login`                                                  | Ola 1 §1              |
-| Recuperar y restablecer la contraseña                                            | `/recuperar-contrasena`, `/restablecer-contrasena?token=` | Ola 1 §1              |
-| Aceptar la invitación de un usuario interno (cuenta nueva o existente)           | `/invitacion/[token]`                                     | Ola 1 §2              |
-| Tablero: KPI, alertas y actividad reciente                                       | `/`                                                       | Ola 1 §8              |
-| Usuarios internos: invitar, rol, bloquear, TOTP, invitaciones                    | `/usuarios`                                               | Ola 1 §5              |
-| Matriz de permisos                                                               | `/usuarios/permisos`                                      | Ola 1 §5 (PLT-04)     |
-| Mi perfil: nombre, idioma, contraseña, cerrar todas las sesiones                 | `/perfil`                                                 | Ola 1 §1              |
-| Solicitudes, bodegas, configuración y bitácora                                   | `/solicitudes`, `/bodegas`, `/configuracion`, `/bitacora` | 4B (rutas preparadas) |
-| Datos de prueba: escenario, entrar como, **buzón simulado**                      | `/__mocks`                                                | solo con mocks        |
+| Pantalla                                                                         | Ruta                                                      | Contrato          |
+| -------------------------------------------------------------------------------- | --------------------------------------------------------- | ----------------- |
+| Entrar con segundo factor (verificar, inscribir con QR, códigos de recuperación) | `/login`                                                  | Ola 1 §1          |
+| Recuperar y restablecer la contraseña                                            | `/recuperar-contrasena`, `/restablecer-contrasena?token=` | Ola 1 §1          |
+| Aceptar la invitación de un usuario interno (cuenta nueva o existente)           | `/invitacion/[token]`                                     | Ola 1 §2          |
+| Tablero: KPI, alertas y actividad reciente                                       | `/`                                                       | Ola 1 §8          |
+| Usuarios internos: invitar, rol, bloquear, TOTP, invitaciones                    | `/usuarios`                                               | Ola 1 §5          |
+| Matriz de permisos                                                               | `/usuarios/permisos`                                      | Ola 1 §5 (PLT-04) |
+| Mi perfil: nombre, idioma, contraseña, cerrar todas las sesiones                 | `/perfil`                                                 | Ola 1 §1          |
+| Bandeja de solicitudes y detalle (tomar, notas, reunión, aprobar, rechazar)      | `/solicitudes`, `/solicitudes/[id]`                       | Ola 1 §3          |
+| Directorio, alta directa y ficha de bodega (perfil, estado, historial, equipo)   | `/bodegas`, `/bodegas/nueva`, `/bodegas/[id]`             | Ola 1 §4, §5      |
+| Configuración: estándar, ajustes por bodega, excepción legal, historial          | `/configuracion`, `/configuracion/[clave]`                | Ola 1 §6          |
+| Bitácora: filtros, detalle con antes/después, CSV y verificación de la cadena    | `/bitacora`                                               | Ola 1 §7          |
+| Datos de prueba: escenario, entrar como, **buzón simulado**                      | `/__mocks`                                                | solo con mocks    |
 
 `AdminShell` con paleta de comandos (`⌘K`/`Ctrl+K` y `/`), guardia por audiencia y organización de plataforma, permisos por rol con `can()`, motivo obligatorio (`ReasonDialog`) en las acciones sobre terceros y `X-Client-App: BACKOFFICE` en todas las peticiones. Reglas completas en [`CLAUDE.md`](CLAUDE.md); avance en [`docs/ROADMAP.md`](docs/ROADMAP.md).
 
@@ -64,7 +67,7 @@ Vercel (framework Next.js, `pnpm build`, Node 22): producción desde `main`, pre
 
 ## Paquetes compartidos
 
-`@drinks-on-chain/ui` y `@drinks-on-chain/mocks` se instalan desde el tarball de su GitHub Release (hoy `ui` 0.3.0-rc.1 y `mocks` 0.3.0-rc.2):
+`@drinks-on-chain/ui` y `@drinks-on-chain/mocks` se instalan desde el tarball de su GitHub Release (hoy `ui` 0.3.0-rc.2 y `mocks` 0.3.0-rc.2):
 
 ```bash
 pnpm add https://github.com/drinks-on-chain/drinks-on-chain-design-system/releases/download/vX.Y.Z/drinks-on-chain-ui-X.Y.Z.tgz
