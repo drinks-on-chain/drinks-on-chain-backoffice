@@ -53,6 +53,7 @@ Sub-etapas 4A–4F de `docs-front/03-roadmap-frontend.md` v3 §8, ordenadas por 
 - [x] `@drinks-on-chain/ui` 0.3.0-rc.2 (foco de diálogos encadenados y `RoleMatrix` desplazable): fuera los parches locales · 2026-09-27
 - [ ] Invitaciones de una bodega con `GET /v1/platform/organizations/{id}/invitations` cuando el contrato la añada (hoy se reconstruyen con los eventos `INVITATION_*` de la bitácora) y estado de la cuenta completa con una lectura propia (hoy, último `USER_BLOCKED`/`USER_UNBLOCKED`)
 - [ ] Contra el backend de desarrollo cuando publique la Etapa 1 (O1-BE-1)
+- [x] IP real del cliente detrás del proxy (O1-OPS-1): `rewrites` sustituidos por `src/proxy.ts`, que reescribe `/api/v1/*` a `${API_ORIGIN}/v1/*` con `X-DOC-Client-IP` firmada (HMAC con `PROXY_SHARED_SECRET`, variable de servidor) · 2026-09-27
 
 ## 4C · Tokenización (Ola 3)
 
