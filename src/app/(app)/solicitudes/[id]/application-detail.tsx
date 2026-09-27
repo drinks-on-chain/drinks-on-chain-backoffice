@@ -398,7 +398,7 @@ function NotesCard({ application: a, canWrite }: { application: WineryApplicatio
 
 /** Historial de la solicitud: sus eventos de la bitácora, del más reciente al más antiguo. */
 function HistoryCard({ application: a }: { application: WineryApplication }) {
-  const audit = useAudit({ resourceType: "WINERY_APPLICATION", resourceId: a.id, limit: 100 });
+  const audit = useAudit({ resourceType: "winery_application", resourceId: a.id, limit: 100 });
   // El detalle cambia con cada acción: se relee el historial.
   const events = audit.data?.items ?? [];
   return (
@@ -407,7 +407,7 @@ function HistoryCard({ application: a }: { application: WineryApplication }) {
         title="Historial"
         action={
           <TextLink asChild variant="inline">
-            <Link href={`/bitacora?recurso=WINERY_APPLICATION&recursoId=${a.id}`}>Ver en la bitácora</Link>
+            <Link href={`/bitacora?recurso=winery_application&recursoId=${a.id}`}>Ver en la bitácora</Link>
           </TextLink>
         }
       />

@@ -5,8 +5,11 @@ import { es } from "@/lib/i18n/es";
 // legible en lugar de fallar: el backend puede añadir acciones nuevas en cualquier ola.
 
 const AUDIT_ACTIONS: Record<string, string> = {
-  USER_LOGGED_IN: "Inicio de sesión",
-  USER_LOGIN_FAILED: "Inicio de sesión fallido",
+  AUTH_LOGIN_SUCCEEDED: "Inicio de sesión",
+  AUTH_LOGIN_FAILED: "Inicio de sesión fallido",
+  AUTH_MFA_CHALLENGED: "Segundo factor pedido",
+  MFA_LOCKED: "Segundo factor bloqueado por intentos",
+  USER_EMAIL_VERIFICATION_SENT: "Verificación de correo enviada",
   USER_CREATED: "Cuenta creada",
   USER_PROFILE_UPDATED: "Perfil actualizado",
   USER_PASSWORD_CHANGED: "Contraseña cambiada",
@@ -54,15 +57,23 @@ const AUDIT_ACTIONS: Record<string, string> = {
   SETTING_CHANGED: "Ajuste cambiado",
   SETTING_OVERRIDE_SET: "Ajuste por bodega cambiado",
   SETTING_OVERRIDE_RESET: "Ajuste por bodega restablecido",
+  // Aprobación y rechazo del flujo anterior a la Ola 1 (`/v1/wineries/:id/approve|reject`).
+  WINERY_APPROVED: "Bodega aprobada",
+  WINERY_REJECTED: "Bodega rechazada",
   // Escrituras del ERP que también quedan en la bitácora.
   TERROIR_CREATED: "Parcela registrada",
+  TERROIR_UPDATED: "Parcela editada",
   HARVEST_BATCH_CREATED: "Vendimia registrada",
   FERMENTATION_TANK_CREATED: "Tanque de fermentación creado",
-  ENOLOGICAL_TREATMENT_RECORDED: "Tratamiento enológico registrado",
-  WINE_AGING_STARTED: "Crianza iniciada",
-  DISTILLATION_RECORDED: "Destilación registrada",
-  BOTTLING_RECORDED: "Embotellado registrado",
-  LAB_ANALYSIS_RECORDED: "Análisis de laboratorio registrado",
+  HARVEST_BATCH_PHYTO_STATUS_CHANGED: "Dictamen fitosanitario",
+  FERMENTATION_LOG_ADDED: "Lectura de fermentación",
+  ENOLOGICAL_TREATMENT_ADDED: "Tratamiento enológico registrado",
+  WINE_AGING_BATCH_CREATED: "Crianza iniciada",
+  PRODUCTION_BATCH_CREATED: "Destilación registrada",
+  BOTTLING_BATCH_CREATED: "Embotellado registrado",
+  LAB_ANALYSIS_CREATED: "Análisis de laboratorio registrado",
+  FILE_UPLOADED: "Archivo subido",
+  SYSTEM_TASK_DONE: "Tarea del sistema",
 };
 
 /** "PLATFORM_USER_BLOCKED" → "Usuario interno bloqueado"; desconocido → "Lot certified". */
@@ -102,22 +113,24 @@ export const MEETING_CHANNEL_LABELS: Record<string, string> = {
 };
 export const meetingChannelLabel = (c: string) => MEETING_CHANNEL_LABELS[c] ?? c;
 
-/** Tipos de recurso de la bitácora. */
+/** Tipos de recurso de la bitácora (`snake_case`, como el backend). */
 export const RESOURCE_TYPE_LABELS: Record<string, string> = {
-  WINERY: "Bodega",
-  WINERY_APPLICATION: "Solicitud",
-  MEMBERSHIP: "Membresía",
-  INVITATION: "Invitación",
-  USER: "Persona",
-  SETTING: "Parámetro",
-  TERROIR: "Parcela",
-  HARVEST_BATCH: "Vendimia",
-  FERMENTATION_TANK: "Cuba",
-  ENOLOGICAL_TREATMENT: "Tratamiento enológico",
-  WINE_AGING: "Crianza",
-  PRODUCTION_BATCH: "Destilación",
-  BOTTLING_BATCH: "Embotellado",
-  LAB_ANALYSIS: "Análisis de laboratorio",
+  winery: "Bodega",
+  winery_application: "Solicitud",
+  membership: "Membresía",
+  invitation: "Invitación",
+  user: "Persona",
+  setting: "Parámetro",
+  terroir: "Parcela",
+  harvest_batch: "Vendimia",
+  fermentation_tank: "Cuba",
+  fermentation_log: "Lectura de fermentación",
+  enological_treatment: "Tratamiento enológico",
+  wine_aging_batch: "Crianza",
+  production_batch: "Destilación",
+  bottling_batch: "Embotellado",
+  lab_analysis: "Análisis de laboratorio",
+  file: "Archivo",
 };
 export const resourceTypeLabel = (t: string) => RESOURCE_TYPE_LABELS[t] ?? auditActionLabel(t);
 

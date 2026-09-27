@@ -38,7 +38,7 @@ Sub-etapas 4A–4F de `docs-front/03-roadmap-frontend.md` v3 §8, ordenadas por 
 - [x] Pruebas unitarias: `can()`, flujo TOTP, formularios con `details` por campo, cliente (`X-Client-App`, `Retry-After`) · 2026-09-27
 - [x] E2E con mocks (escritorio): TOTP real, inscripción, recuperación, invitar y aceptar desde el buzón, bloquear con motivo y verlo en el tablero, matriz, teclado y ⌘K, axe sin violaciones serias, sin errores de consola · 2026-09-27
 - [x] Verificación visual contra `docs-front/design-system/03-backoffice.html` · 2026-09-27
-- [ ] Contra el backend de desarrollo cuando publique la Etapa 1 (O1-BE-1)
+- [x] Contra el backend de desarrollo (Etapa 1 de O1-BE-1): login con TOTP, inscripción, recuperación por correo, tablero, usuarios internos (invitar y aceptar desde Mailpit, rol, bloqueo con motivo), matriz; `e2e/backend-real.spec.ts` (`E2E_REAL_API=1`) y job manual `e2e-backend-real` en CI · 2026-09-27
 
 ## 4B · Solicitudes, bodegas y equipo (O1-BO-2, Ola 1)
 
@@ -51,8 +51,9 @@ Sub-etapas 4A–4F de `docs-front/03-roadmap-frontend.md` v3 §8, ordenadas por 
 - [x] Tablero: los KPI y su desglose enlazan con las listas filtradas · 2026-09-27
 - [x] ⌘K: "Nueva bodega", "Ir a solicitud…" y búsqueda de solicitudes y bodegas en el servidor · 2026-09-27
 - [x] `@drinks-on-chain/ui` 0.3.0-rc.2 (foco de diálogos encadenados y `RoleMatrix` desplazable): fuera los parches locales · 2026-09-27
-- [ ] Invitaciones de una bodega con `GET /v1/platform/organizations/{id}/invitations` cuando el contrato la añada (hoy se reconstruyen con los eventos `INVITATION_*` de la bitácora) y estado de la cuenta completa con una lectura propia (hoy, último `USER_BLOCKED`/`USER_UNBLOCKED`)
-- [ ] Contra el backend de desarrollo cuando publique la Etapa 1 (O1-BE-1)
+- [x] Invitaciones de una bodega con `GET /v1/platform/organizations/{id}/invitations` y cuenta completa con `GET /v1/platform/accounts/{userId}` (estado y membresías en el panel de la persona): fuera las vistas derivadas de la bitácora · 2026-09-27
+- [x] `@drinks-on-chain/mocks` 0.4.0-rc.1 (alineado con el backend de la Ola 1): tipos de recurso de la bitácora en `snake_case` y códigos de acción del backend · 2026-09-27
+- [x] Contra el backend de desarrollo (Etapa 1 de O1-BE-1): solicitudes (tomar, nota, reunión, aprobar y activación del dueño, rechazar, ⌘K), alta directa con reenvío y activación, suspender/reactivar, equipo (invitar/anular, bloqueo en la bodega, cuenta completa), transferir la titularidad, configuración (estándar y vuelta atrás, excepción legal y vuelta al estándar), bitácora (filtros, CSV, verificación), en `e2e/backend-real.spec.ts` · 2026-09-27
 - [x] IP real del cliente detrás del proxy (O1-OPS-1): `rewrites` sustituidos por `src/proxy.ts`, que reescribe `/api/v1/*` a `${API_ORIGIN}/v1/*` con `X-DOC-Client-IP` firmada (HMAC con `PROXY_SHARED_SECRET`, variable de servidor) · 2026-09-27
 
 ## 4C · Tokenización (Ola 3)
