@@ -74,6 +74,18 @@ describe("api", () => {
     expect(call!.init.credentials).toBe("include");
   });
 
+  it("identifica la app de origen con X-Client-App: BACKOFFICE en todas las peticiones", async () => {
+    clearSession();
+    fetchMock.mockResolvedValueOnce(ok(null));
+    fetchMock.mockResolvedValueOnce(ok(null));
+    await api("/v1/public/x", { auth: false });
+    setSession({ accessToken: "a1", expiresIn: 900 });
+    await api("/v1/platform/x", { method: "POST", body: { reason: "abc" } });
+    for (const call of calls()) {
+      expect((call.init.headers as Record<string, string>)["X-Client-App"]).toBe("BACKOFFICE");
+    }
+  });
+
   it("convierte el envoltorio de error en ApiError con sus details", async () => {
     setSession({ accessToken: "a1", expiresIn: 900 });
     fetchMock.mockResolvedValueOnce(

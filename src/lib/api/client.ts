@@ -38,6 +38,13 @@ export function setSessionEndedHandler(fn: (reason: SessionEndReason) => void) {
   onSessionEnded = fn;
 }
 
+/**
+ * App de origen de cada petición (contrato de la Ola 1 §7): la bitácora la registra y el backend
+ * elige con ella la app de los enlaces de los correos (recuperación de contraseña).
+ */
+export const CLIENT_APP_HEADER = "X-Client-App";
+export const CLIENT_APP = "BACKOFFICE";
+
 /** Margen para renovar antes de que caduque el acceso. */
 const RENEW_BEFORE_MS = 30_000;
 
@@ -56,6 +63,7 @@ async function send(path: string, opts: RequestOptions<unknown>, token: string |
     Accept: "application/json",
     "Accept-Language": "es",
     "X-Correlation-ID": crypto.randomUUID(),
+    [CLIENT_APP_HEADER]: CLIENT_APP,
   };
   let body: BodyInit | undefined;
   if (opts.body instanceof FormData) {
