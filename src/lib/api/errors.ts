@@ -51,6 +51,10 @@ export class ContractError extends Error {
 export function errorMessage(error: unknown): string {
   if (error instanceof ApiError) {
     if (error.status >= 500) return "El servidor tuvo un problema. Inténtalo de nuevo en unos minutos.";
+    if (error.code === "AUTH_MFA_REQUIRED") {
+      return "Falta el segundo factor en esta sesión: vuelve a entrar para verificarla.";
+    }
+    if (error.code === "PLATFORM_SUPERADMIN_PROTECTED") return error.message;
     if (error.isForbidden) return "No tienes permiso para esta acción.";
     return error.message;
   }

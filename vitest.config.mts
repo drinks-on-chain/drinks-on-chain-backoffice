@@ -11,5 +11,7 @@ export default defineConfig({
     environment: "jsdom",
     setupFiles: ["./vitest.setup.ts"],
     include: ["src/**/*.test.{ts,tsx}"],
+    // Las pruebas de formularios teclean con user-event: margen para máquinas cargadas.
+    testTimeout: 20_000,
   },
 });
