@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import type { InternalRole } from "@drinks-on-chain/mocks";
 import { Alert, Button, Field, Input, Modal, Select, Textarea, toast } from "@drinks-on-chain/ui";
 import { ApiError, errorMessage } from "@/lib/api/errors";
@@ -38,31 +38,6 @@ function InviteForm({ onDone }: { onDone: () => void }) {
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<InternalRole>("OPERATIONS");
   const [reason, setReason] = useState("");
-  const form = useRef<HTMLFormElement>(null);
-
-  // Abierto desde la paleta de comandos, la paleta devuelve el foco a su disparador al terminar
-  // de cerrarse y se lo quita al diálogo. Hasta que la persona haga algo (y como mucho un
-  // segundo), si el foco sale del diálogo, vuelve una vez al correo. (Pendiente de corregir en la
-  // CommandPalette de @drinks-on-chain/ui: no debería devolver el foco si otro diálogo lo tiene.)
-  useEffect(() => {
-    const stop = () => {
-      window.clearTimeout(id);
-      document.removeEventListener("focusin", onFocusIn);
-      document.removeEventListener("pointerdown", stop, true);
-      document.removeEventListener("keydown", stop, true);
-    };
-    const onFocusIn = (event: FocusEvent) => {
-      const box = form.current?.closest('[role="dialog"]');
-      if (!box || !(event.target instanceof Node) || box.contains(event.target)) return;
-      stop();
-      form.current?.querySelector<HTMLInputElement>('input[type="email"]')?.focus();
-    };
-    const id = window.setTimeout(stop, 1_000);
-    document.addEventListener("focusin", onFocusIn);
-    document.addEventListener("pointerdown", stop, true);
-    document.addEventListener("keydown", stop, true);
-    return stop;
-  }, []);
 
   const error = invite.error;
   const { fieldErrors, formErrors } = fieldErrorsFrom(error, ["email", "role", "reason"]);
@@ -84,7 +59,7 @@ function InviteForm({ onDone }: { onDone: () => void }) {
   }
 
   return (
-    <form ref={form} onSubmit={onSubmit} className="grid gap-4" noValidate>
+    <form onSubmit={onSubmit} className="grid gap-4" noValidate>
       {(other || formErrors.length > 0) && <Alert tone="danger">{other ?? formErrors.join(" ")}</Alert>}
       <Field label="Correo electrónico" required error={fieldErrors.email ?? conflict}>
         <Input type="email" autoComplete="off" value={email} onChange={(e) => setEmail(e.target.value)} autoFocus />
