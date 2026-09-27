@@ -1,12 +1,12 @@
 {
-  "name": "drinks-on-chain-app-template",
+  "name": "drinks-on-chain-backoffice",
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --port 3009",
-    "dev:mocks": "cross-env NEXT_PUBLIC_MOCKS=1 next dev --port 3009",
+    "dev": "next dev --port 3003",
+    "dev:mocks": "cross-env NEXT_PUBLIC_MOCKS=1 next dev --port 3003",
     "build": "next build",
-    "start": "next start --port 3009",
+    "start": "next start --port 3003",
     "lint": "eslint",
     "typecheck": "next typegen && tsc --noEmit",
     "test": "vitest run",
