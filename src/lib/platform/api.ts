@@ -63,5 +63,9 @@ export async function sendPasswordReset(userId: string, reason: string) {
 
 /** `POST /v1/invitations/{id}/resend|revoke`. */
 export function manageInvitation(invitationId: string, action: "resend" | "revoke", reason: string) {
-  return api(`/v1/invitations/${invitationId}/${action}`, { method: "POST", body: { reason }, schema: InvitationSchema });
+  return api(`/v1/invitations/${invitationId}/${action}`, {
+    method: "POST",
+    body: { reason },
+    schema: InvitationSchema,
+  });
 }

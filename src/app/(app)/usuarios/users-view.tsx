@@ -3,7 +3,17 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { KeyRound, Lock, MailPlus, MoreHorizontal, RotateCcw, ShieldOff, UserCheck, UserCog, UserX } from "lucide-react";
+import {
+  KeyRound,
+  Lock,
+  MailPlus,
+  MoreHorizontal,
+  RotateCcw,
+  ShieldOff,
+  UserCheck,
+  UserCog,
+  UserX,
+} from "lucide-react";
 import type { PlatformUser } from "@drinks-on-chain/mocks";
 import {
   Alert,
@@ -20,7 +30,6 @@ import {
   TextLink,
   type MenuEntry,
 } from "@drinks-on-chain/ui";
-import { PageHeader } from "@/components/page-header";
 import { useMe } from "@/lib/auth/hooks";
 import { fmtRelative } from "@/lib/format";
 import { roleLabel } from "@/lib/platform/labels";
@@ -71,7 +80,6 @@ export function UsersView() {
   if (me.data && !allowed) {
     return (
       <div className="grid gap-5">
-        <PageHeader title="Usuarios internos" />
         <Alert tone="info">
           Solo administración gestiona los usuarios internos. Puedes consultar qué hace cada rol en la{" "}
           <TextLink asChild variant="inline">
@@ -152,19 +160,17 @@ export function UsersView() {
 
   return (
     <div className="grid gap-5">
-      <PageHeader
-        title="Usuarios internos"
-        description="Personal de Drinks on Chain con acceso al back office. Se entra solo por invitación y con segundo factor."
+      <FilterBar
         actions={
           can(me.data, "users.invite") ? (
-            <Button onClick={() => setParam("invitar", "1")} iconStart={<MailPlus aria-hidden="true" className="size-4" />}>
+            <Button
+              onClick={() => setParam("invitar", "1")}
+              iconStart={<MailPlus aria-hidden="true" className="size-4" />}
+            >
               Invitar usuario interno
             </Button>
           ) : null
         }
-      />
-
-      <FilterBar
         filters={filters}
         onRemove={(id) => setParam(id, undefined)}
         onClearAll={
@@ -238,7 +244,10 @@ export function UsersView() {
                   {u.fullName}
                   {u.userId === me.data?.user.id && <span className="text-xs font-normal text-fg-subtle">(tú)</span>}
                 </span>
-                <span className="text-xs text-fg-muted">{u.email}</span>
+                {/* Una invitación a un correo sin cuenta no tiene nombre: el backend repite el correo. */}
+                <span className="text-xs text-fg-muted">
+                  {u.fullName === u.email ? "Invitación pendiente de aceptar" : u.email}
+                </span>
               </div>
             ),
           },

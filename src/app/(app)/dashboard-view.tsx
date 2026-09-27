@@ -97,25 +97,27 @@ export function DashboardView() {
           </section>
 
           <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
-            <AlertsFeed
-              title="Alertas"
-              headingLevel={2}
-              loading={loading}
-              items={(d?.alerts ?? []).map((a) => ({
-                id: a.id,
-                level: a.level,
-                message: a.message,
-                time: <time dateTime={a.createdAt}>{fmtRelative(a.createdAt)}</time>,
-                action: a.link ? (
-                  <Button asChild size="sm" variant="secondary">
-                    <Link href={a.link}>
-                      Ver<span className="sr-only">: {a.message}</span>
-                    </Link>
-                  </Button>
-                ) : undefined,
-              }))}
-              empty="Sin alertas: todo en orden."
-            />
+            <Card className="p-5">
+              <AlertsFeed
+                title="Alertas"
+                headingLevel={2}
+                loading={loading}
+                items={(d?.alerts ?? []).map((a) => ({
+                  id: a.id,
+                  level: a.level,
+                  message: a.message,
+                  time: <time dateTime={a.createdAt}>{fmtRelative(a.createdAt)}</time>,
+                  action: a.link ? (
+                    <Button asChild size="sm" variant="secondary">
+                      <Link href={a.link}>
+                        Ver<span className="sr-only">: {a.message}</span>
+                      </Link>
+                    </Button>
+                  ) : undefined,
+                }))}
+                empty="Sin alertas: todo en orden."
+              />
+            </Card>
             <RecentActivity events={d?.recentAudit} loading={loading} />
           </div>
         </>
@@ -138,7 +140,7 @@ function RecentActivity({ events, loading }: { events: AuditEvent[] | undefined;
         title="Actividad reciente"
         description="Últimos movimientos de la bitácora."
         action={
-          <TextLink asChild>
+          <TextLink asChild variant="inline">
             <Link href="/bitacora">Ver la bitácora</Link>
           </TextLink>
         }

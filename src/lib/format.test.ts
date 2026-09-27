@@ -71,6 +71,7 @@ describe("formato es-BO", () => {
     const dt = fmtDateTime("2026-03-04T09:05:00Z");
     expect(dt.startsWith("4 mar 2026")).toBe(true);
     expect(dt).toContain("09:05");
+    expect(fmtDateTime("2026-09-28T13:01:00Z")).toBe("28 sept 2026, 13:01");
   });
 
   it("días restantes y hashes abreviados", () => {

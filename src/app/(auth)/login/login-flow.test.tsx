@@ -72,7 +72,10 @@ describe("LoginFlow", () => {
     // Aún no hay sesión: el reto no trae tokens.
     expect(getAccessToken()).toBeNull();
 
-    respond("/auth/mfa/verify", fail(401, "AUTH_MFA_INVALID_CODE", "El código no es válido", [{ field: "code", message: "x" }]));
+    respond(
+      "/auth/mfa/verify",
+      fail(401, "AUTH_MFA_INVALID_CODE", "El código no es válido", [{ field: "code", message: "x" }]),
+    );
     const code = screen.getByLabelText(/Código de verificación/);
     await userEvent.type(code, "111111");
     expect(await screen.findByText(/El código no es válido/)).toBeInTheDocument();
@@ -102,7 +105,10 @@ describe("LoginFlow", () => {
     respond("/auth/login", ok(challenge(false)));
     respond(
       "/auth/mfa/enroll",
-      ok({ otpauthUrl: "otpauth://totp/Drinks%20on%20Chain:analista?secret=ABC&issuer=Drinks%20on%20Chain", secret: "ABCDEFGH" }),
+      ok({
+        otpauthUrl: "otpauth://totp/Drinks%20on%20Chain:analista?secret=ABC&issuer=Drinks%20on%20Chain",
+        secret: "ABCDEFGH",
+      }),
     );
     renderWithQuery(<LoginFlow />);
     await enterCredentials("analista@drinksonchain.test");

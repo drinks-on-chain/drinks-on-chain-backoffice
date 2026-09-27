@@ -10,7 +10,13 @@ export const ok = (data: unknown, status = 200) =>
 /** Respuesta de error del envoltorio (contrato de la Ola 0 §1). */
 export const fail = (status: number, code: string, message = code, details: unknown = null) =>
   new Response(
-    JSON.stringify({ success: false, statusCode: status, timestamp: "", path: "/x", error: { code, message, details } }),
+    JSON.stringify({
+      success: false,
+      statusCode: status,
+      timestamp: "",
+      path: "/x",
+      error: { code, message, details },
+    }),
     { status },
   );
 

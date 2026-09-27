@@ -80,7 +80,11 @@ describe("can() del back office", () => {
     expect(canUseBackoffice(blocked)).toBe(false);
     expect(can(blocked, "dashboard.read")).toBe(false);
     expect(canUseBackoffice(me([], null, "CONSUMER"))).toBe(false);
-    expect(canUseBackoffice(me([membership({ organizationId: "altos", organizationType: "WINERY", role: "OWNER" })], "altos"))).toBe(false);
+    expect(
+      canUseBackoffice(
+        me([membership({ organizationId: "altos", organizationType: "WINERY", role: "OWNER" })], "altos"),
+      ),
+    ).toBe(false);
     expect(can(undefined, "dashboard.read")).toBe(false);
   });
 });

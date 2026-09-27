@@ -63,7 +63,12 @@ export function ResetPasswordForm({ token }: { token: string }) {
         />
       </Field>
       <Field label={es.recovery.confirmPassword} required error={mismatch ? es.recovery.mismatch : undefined}>
-        <Input type="password" autoComplete="new-password" value={confirm} onChange={(e) => setConfirm(e.target.value)} />
+        <Input
+          type="password"
+          autoComplete="new-password"
+          value={confirm}
+          onChange={(e) => setConfirm(e.target.value)}
+        />
       </Field>
       <Button type="submit" size="lg" loading={reset.isPending}>
         {es.recovery.resetSubmit}

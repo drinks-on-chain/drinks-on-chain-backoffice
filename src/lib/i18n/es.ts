@@ -51,7 +51,8 @@ export const es = {
     useRecovery: "Usar un código de recuperación",
     useTotp: "Usar el código de la app",
     recoveryCode: "Código de recuperación",
-    recoveryHelp: "Uno de los 10 códigos que guardaste al activar la verificación (XXXX-XXXX). Cada código sirve una vez.",
+    recoveryHelp:
+      "Uno de los 10 códigos que guardaste al activar la verificación (XXXX-XXXX). Cada código sirve una vez.",
     invalidCode: "El código no es válido. Revisa la hora de tu teléfono y vuelve a intentarlo.",
     expired: "El tiempo para verificar caducó (5 minutos). Vuelve a entrar.",
     tooMany: "Demasiados códigos incorrectos. Espera unos minutos y vuelve a entrar; te avisamos por correo.",
@@ -72,7 +73,8 @@ export const es = {
     forgotTitle: "Recuperar la contraseña",
     forgotBody: "Te enviaremos un enlace para crear una contraseña nueva. Caduca en 60 minutos.",
     forgotSubmit: "Enviar el enlace",
-    forgotSent: "Si el correo tiene una cuenta, te llegará un enlace en unos minutos. Revisa también el correo no deseado.",
+    forgotSent:
+      "Si el correo tiene una cuenta, te llegará un enlace en unos minutos. Revisa también el correo no deseado.",
     resetTitle: "Contraseña nueva",
     resetSubmit: "Guardar la contraseña",
     resetDone: "Contraseña cambiada. Entra con la nueva: las demás sesiones se cerraron.",

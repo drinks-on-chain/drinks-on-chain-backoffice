@@ -47,7 +47,10 @@ describe("restablecer la contraseña", () => {
     renderWithQuery(<ResetPasswordForm token="rst_viejo" />);
     await submit("vendimia-2026");
     expect(await screen.findByText(/El enlace no es válido o caducó/)).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Pedir un enlace nuevo" })).toHaveAttribute("href", "/recuperar-contrasena");
+    expect(screen.getByRole("link", { name: "Pedir un enlace nuevo" })).toHaveAttribute(
+      "href",
+      "/recuperar-contrasena",
+    );
   });
 
   it("al guardar vuelve al login", async () => {

@@ -4,7 +4,12 @@ import { useEffect, useRef, useState, type Dispatch, type FormEvent } from "reac
 import { Alert, Button, ErrorState, Field, Input, OtpInput, SecretReveal, SkeletonText } from "@drinks-on-chain/ui";
 import { ApiError, errorMessage } from "@/lib/api/errors";
 import { useConfirmMfaEnrollment, useEnrollMfa, useVerifyMfa } from "@/lib/auth/hooks";
-import { mfaRestartNotice, normalizeRecoveryCode, type LoginFlowEvent, type LoginFlowState } from "@/lib/auth/login-flow";
+import {
+  mfaRestartNotice,
+  normalizeRecoveryCode,
+  type LoginFlowEvent,
+  type LoginFlowState,
+} from "@/lib/auth/login-flow";
 import { es } from "@/lib/i18n/es";
 
 // Pasos del segundo factor (contrato de la Ola 1 §1): verificar, inscribir y mostrar los códigos
@@ -188,6 +193,8 @@ function EnrollStep({ mfaToken, dispatch }: { mfaToken: string; dispatch: Dispat
         secret={enroll.data.secret}
         otpauthUrl={enroll.data.otpauthUrl}
         hideAcknowledge
+        // En la tarjeta estrecha del acceso, la clave agrupada cabe entera a 14 px.
+        className="[&_input]:text-sm"
         labels={{ qr: "Código QR para tu app de autenticación", secret: "Clave para escribirla a mano" }}
       />
       {form && <Alert tone="danger">{form}</Alert>}

@@ -13,7 +13,13 @@ import {
   setScenario,
   type ScenarioName,
 } from "@drinks-on-chain/mocks/browser";
-import { DEMO_PASSWORD, DEMO_TOTP_SECRET, demoUsers, generateTotp, type DemoUser } from "@drinks-on-chain/mocks/fixtures";
+import {
+  DEMO_PASSWORD,
+  DEMO_TOTP_SECRET,
+  demoUsers,
+  generateTotp,
+  type DemoUser,
+} from "@drinks-on-chain/mocks/fixtures";
 import type { MockEmail } from "@drinks-on-chain/mocks";
 import {
   Alert,
@@ -67,7 +73,10 @@ export function MocksPanel() {
       const res = await login({ email: user.email, password: DEMO_PASSWORD });
       if ("mfa" in res) {
         if (!res.mfa.enrolled || !user.mfa?.secret) {
-          toast({ title: "Esta persona aún no inscribió el TOTP: entra desde el login para inscribirlo.", tone: "info" });
+          toast({
+            title: "Esta persona aún no inscribió el TOTP: entra desde el login para inscribirlo.",
+            tone: "info",
+          });
           router.push("/login");
           return;
         }
@@ -288,7 +297,10 @@ function Mailbox() {
                 return (
                   <TextLink asChild variant="inline">
                     <Link href={path}>
-                      Abrir<span className="sr-only">: {m.subject} para {m.to}</span>
+                      Abrir
+                      <span className="sr-only">
+                        : {m.subject} para {m.to}
+                      </span>
                     </Link>
                   </TextLink>
                 );
@@ -296,7 +308,9 @@ function Mailbox() {
               return m.link ? (
                 <TextLink variant="inline" href={m.link} target="_blank" rel="noopener noreferrer">
                   {m.app ?? "Enlace"}
-                  <span className="sr-only">: {m.subject} para {m.to} (otra app)</span>
+                  <span className="sr-only">
+                    : {m.subject} para {m.to} (otra app)
+                  </span>
                 </TextLink>
               ) : (
                 <span className="text-fg-subtle">—</span>

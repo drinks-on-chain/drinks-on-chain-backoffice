@@ -62,7 +62,9 @@ function ProfileForm({ me }: { me: MeResponse }) {
   const active = activeMembership(me);
   const { fieldErrors, formErrors } = fieldErrorsFrom(update.error, ["fullName", "preferredLocale"]);
   const other =
-    update.error && Object.keys(fieldErrors).length === 0 && formErrors.length === 0 ? errorMessage(update.error) : null;
+    update.error && Object.keys(fieldErrors).length === 0 && formErrors.length === 0
+      ? errorMessage(update.error)
+      : null;
 
   function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -112,7 +114,9 @@ function PasswordForm() {
   const [mismatch, setMismatch] = useState(false);
   const { fieldErrors, formErrors } = fieldErrorsFrom(change.error, ["currentPassword", "newPassword"]);
   const other =
-    change.error && Object.keys(fieldErrors).length === 0 && formErrors.length === 0 ? errorMessage(change.error) : null;
+    change.error && Object.keys(fieldErrors).length === 0 && formErrors.length === 0
+      ? errorMessage(change.error)
+      : null;
 
   function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -148,10 +152,20 @@ function PasswordForm() {
           />
         </Field>
         <Field label="Contraseña nueva" help={es.recovery.passwordHelp} required error={fieldErrors.newPassword}>
-          <Input type="password" autoComplete="new-password" value={newPassword} onChange={(e) => setNew(e.target.value)} />
+          <Input
+            type="password"
+            autoComplete="new-password"
+            value={newPassword}
+            onChange={(e) => setNew(e.target.value)}
+          />
         </Field>
         <Field label={es.recovery.confirmPassword} required error={mismatch ? es.recovery.mismatch : undefined}>
-          <Input type="password" autoComplete="new-password" value={confirm} onChange={(e) => setConfirm(e.target.value)} />
+          <Input
+            type="password"
+            autoComplete="new-password"
+            value={confirm}
+            onChange={(e) => setConfirm(e.target.value)}
+          />
         </Field>
         <div>
           <Button type="submit" variant="secondary" loading={change.isPending}>

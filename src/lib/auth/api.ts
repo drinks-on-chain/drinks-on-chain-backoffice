@@ -40,7 +40,12 @@ export function verifyMfa(body: { mfaToken: string; code: string }) {
 
 /** `POST /v1/auth/mfa/enroll` → `{ otpauthUrl, secret }` para la app de autenticación. */
 export function enrollMfa(mfaToken: string) {
-  return api("/v1/auth/mfa/enroll", { method: "POST", body: { mfaToken }, schema: MfaEnrollResponseSchema, auth: false });
+  return api("/v1/auth/mfa/enroll", {
+    method: "POST",
+    body: { mfaToken },
+    schema: MfaEnrollResponseSchema,
+    auth: false,
+  });
 }
 
 /** `POST /v1/auth/mfa/enroll/confirm` → sesión + 10 códigos de recuperación (se muestran una vez). */

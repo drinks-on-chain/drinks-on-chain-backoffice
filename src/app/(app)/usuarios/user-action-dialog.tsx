@@ -88,9 +88,7 @@ function copyFor({ kind, user }: UserDialog): Copy {
  */
 export function UserActionDialog({ dialog, onClose }: { dialog: UserDialog | null; onClose: () => void }) {
   // Se vuelve a montar con cada diálogo: el rol elegido y los errores empiezan limpios.
-  return dialog ? (
-    <ActionDialog key={`${dialog.kind}:${dialog.user.email}`} dialog={dialog} onClose={onClose} />
-  ) : null;
+  return dialog ? <ActionDialog key={`${dialog.kind}:${dialog.user.email}`} dialog={dialog} onClose={onClose} /> : null;
 }
 
 function ActionDialog({ dialog, onClose }: { dialog: UserDialog; onClose: () => void }) {

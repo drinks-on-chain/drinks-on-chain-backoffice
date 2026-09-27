@@ -109,7 +109,9 @@ describe("acciones con motivo sobre un usuario interno", () => {
 
   it("marca el motivo con el details del 422 y avisa de un 403 dentro del diálogo", async () => {
     fetchMock.mockResolvedValueOnce(
-      fail(422, "VALIDATION_ERROR", "Datos inválidos", [{ field: "reason", message: "El motivo es demasiado genérico" }]),
+      fail(422, "VALIDATION_ERROR", "Datos inválidos", [
+        { field: "reason", message: "El motivo es demasiado genérico" },
+      ]),
     );
     fetchMock.mockResolvedValueOnce(fail(403, "FORBIDDEN", "Requiere rol ADMIN"));
     renderWithQuery(<UserActionDialog dialog={{ kind: "block", user }} onClose={() => {}} />);

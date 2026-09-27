@@ -22,6 +22,8 @@ export const fmtDateTime = (iso: string) =>
     year: "numeric",
     hour: "2-digit",
     minute: "2-digit",
+    // 24 h: evita el "p. m." de es-BO (y que el recorte del punto del mes lo deje en "p m.").
+    hourCycle: "h23",
     timeZone: "UTC",
   })
     .format(new Date(iso))
