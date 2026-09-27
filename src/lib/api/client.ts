@@ -24,6 +24,8 @@ export type RequestOptions<T> = {
   /** false en rutas públicas (login, trazabilidad pública). */
   auth?: boolean;
   signal?: AbortSignal;
+  /** Cabecera `Accept` (por defecto JSON; `text/csv` en las exportaciones). */
+  accept?: string;
 };
 
 /** Códigos con los que el backend da la sesión por terminada (contrato de la Ola 0 §5). */
@@ -37,6 +39,13 @@ let onSessionEnded: (reason: SessionEndReason) => void = () => {};
 export function setSessionEndedHandler(fn: (reason: SessionEndReason) => void) {
   onSessionEnded = fn;
 }
+
+/**
+ * App de origen de cada petición (contrato de la Ola 1 §7): la bitácora la registra y el backend
+ * elige con ella la app de los enlaces de los correos (recuperación de contraseña).
+ */
+export const CLIENT_APP_HEADER = "X-Client-App";
+export const CLIENT_APP = "BACKOFFICE";
 
 /** Margen para renovar antes de que caduque el acceso. */
 const RENEW_BEFORE_MS = 30_000;
@@ -53,9 +62,10 @@ export function buildUrl(path: string, query?: Query): string {
 
 async function send(path: string, opts: RequestOptions<unknown>, token: string | null): Promise<Response> {
   const headers: Record<string, string> = {
-    Accept: "application/json",
+    Accept: opts.accept ?? "application/json",
     "Accept-Language": "es",
     "X-Correlation-ID": crypto.randomUUID(),
+    [CLIENT_APP_HEADER]: CLIENT_APP,
   };
   let body: BodyInit | undefined;
   if (opts.body instanceof FormData) {
@@ -88,6 +98,9 @@ async function parseError(res: Response, path: string): Promise<ApiError> {
     // Cuerpo vacío o no JSON.
   }
   const parsed = errorEnvelope.safeParse(json);
+  // 429: el backend indica la espera en segundos (`Retry-After`).
+  const retry = Number(res.headers.get("Retry-After"));
+  const retryAfter = Number.isFinite(retry) && retry > 0 ? retry : null;
   if (parsed.success) {
     const { error, statusCode, path: p } = parsed.data;
     return new ApiError({
@@ -96,9 +109,16 @@ async function parseError(res: Response, path: string): Promise<ApiError> {
       message: error.message,
       details: error.details,
       path: p,
+      retryAfter,
     });
   }
-  return new ApiError({ status: res.status, code: `HTTP_${res.status}`, message: res.statusText || "Error", path });
+  return new ApiError({
+    status: res.status,
+    code: `HTTP_${res.status}`,
+    message: res.statusText || "Error",
+    path,
+    retryAfter,
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -214,15 +234,15 @@ export async function logoutSession(): Promise<void> {
 // ---------------------------------------------------------------------------
 
 /**
- * Llama al backend y devuelve `data` ya validado.
- * Lanza ApiError (respuesta de error), NetworkError (sin conexión) o ContractError (forma inesperada).
+ * Envía la petición con la sesión: renueva antes de tiempo, reintenta una vez tras un 401 con el
+ * acceso renovado y cierra la sesión si no se puede renovar. Devuelve la respuesta sin leer.
  */
-export async function api<T = unknown>(path: string, opts: RequestOptions<T> = {}): Promise<T> {
+async function authorizedFetch(path: string, opts: RequestOptions<unknown>): Promise<Response> {
   const useAuth = opts.auth ?? true;
   if (useAuth) await ensureFreshAccess();
 
   const sentToken = useAuth ? getAccessToken() : null;
-  let res = await send(path, opts as RequestOptions<unknown>, sentToken);
+  let res = await send(path, opts, sentToken);
 
   if (res.status === 401 && useAuth && sentToken) {
     const error = await parseError(res.clone(), path);
@@ -243,7 +263,7 @@ export async function api<T = unknown>(path: string, opts: RequestOptions<T> = {
         throw outcome.error instanceof ApiError ? outcome.error : error;
       }
     }
-    res = await send(path, opts as RequestOptions<unknown>, getAccessToken());
+    res = await send(path, opts, getAccessToken());
     if (res.status === 401) {
       const again = await parseError(res.clone(), path);
       endSession(SESSION_ENDED_CODES.includes(again.code) ? "revoked" : "expired");
@@ -251,6 +271,15 @@ export async function api<T = unknown>(path: string, opts: RequestOptions<T> = {
   }
 
   if (!res.ok) throw await parseError(res, path);
+  return res;
+}
+
+/**
+ * Llama al backend y devuelve `data` ya validado.
+ * Lanza ApiError (respuesta de error), NetworkError (sin conexión) o ContractError (forma inesperada).
+ */
+export async function api<T = unknown>(path: string, opts: RequestOptions<T> = {}): Promise<T> {
+  const res = await authorizedFetch(path, opts as RequestOptions<unknown>);
   if (res.status === 204) return undefined as T;
 
   const envelope = successEnvelope.safeParse(await res.json());
@@ -263,4 +292,19 @@ export async function api<T = unknown>(path: string, opts: RequestOptions<T> = {
     throw new ContractError(path, data.error.issues);
   }
   return data.data;
+}
+
+/**
+ * Descarga un archivo del backend (p. ej. `text/csv` de la exportación de la bitácora): misma
+ * sesión y mismos errores que `api`, pero el cuerpo no va en el envoltorio JSON.
+ */
+export async function apiFile(
+  path: string,
+  opts: Omit<RequestOptions<unknown>, "schema" | "body" | "method"> = {},
+): Promise<{ blob: Blob; filename: string | null; contentType: string }> {
+  const res = await authorizedFetch(path, { ...opts, method: "GET" });
+  const contentType = res.headers.get("Content-Type") ?? "application/octet-stream";
+  const disposition = res.headers.get("Content-Disposition") ?? "";
+  const match = /filename\*?=(?:UTF-8'')?"?([^";]+)"?/i.exec(disposition);
+  return { blob: await res.blob(), filename: match ? decodeURIComponent(match[1]!) : null, contentType };
 }

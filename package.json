@@ -1,12 +1,12 @@
 {
-  "name": "drinks-on-chain-app-template",
+  "name": "drinks-on-chain-backoffice",
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --port 3009",
-    "dev:mocks": "cross-env NEXT_PUBLIC_MOCKS=1 next dev --port 3009",
+    "dev": "next dev --port 3003",
+    "dev:mocks": "cross-env NEXT_PUBLIC_MOCKS=1 next dev --port 3003",
     "build": "next build",
-    "start": "next start --port 3009",
+    "start": "next start --port 3003",
     "lint": "eslint",
     "typecheck": "next typegen && tsc --noEmit",
     "test": "vitest run",
@@ -16,9 +16,10 @@
     "format:check": "prettier --check ."
   },
   "dependencies": {
-    "@drinks-on-chain/mocks": "https://github.com/drinks-on-chain/drinks-on-chain-mocks/releases/download/v0.2.0-rc.1/drinks-on-chain-mocks-0.2.0-rc.1.tgz",
-    "@drinks-on-chain/ui": "https://github.com/drinks-on-chain/drinks-on-chain-design-system/releases/download/v0.2.0/drinks-on-chain-ui-0.2.0.tgz",
+    "@drinks-on-chain/mocks": "https://github.com/drinks-on-chain/drinks-on-chain-mocks/releases/download/v0.3.0-rc.2/drinks-on-chain-mocks-0.3.0-rc.2.tgz",
+    "@drinks-on-chain/ui": "https://github.com/drinks-on-chain/drinks-on-chain-design-system/releases/download/v0.3.0-rc.2/drinks-on-chain-ui-0.3.0-rc.2.tgz",
     "@tanstack/react-query": "^5.103.2",
+    "lucide-react": "^1.48.0",
     "msw": "^2.15.0",
     "next": "16.3.6",
     "react": "19.2.8",
@@ -26,6 +27,7 @@
     "zod": "^4.6.5"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
     "@playwright/test": "^1.63.0",
     "@tailwindcss/postcss": "^4",
     "@testing-library/jest-dom": "^7.0.1",

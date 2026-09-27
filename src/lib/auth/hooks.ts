@@ -2,9 +2,25 @@
 
 import { useSyncExternalStore } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import type { MeResponse } from "@drinks-on-chain/mocks";
+import type { MeResponse, SessionResponse } from "@drinks-on-chain/mocks";
 import { getSessionStatus, subscribeSession, type SessionStatus } from "@/lib/api/session";
-import { fetchMe, login, logout, switchOrganization, updateMe } from "./api";
+import {
+  acceptInvitation,
+  applySession,
+  changePassword,
+  confirmMfaEnrollment,
+  enrollMfa,
+  fetchInvitation,
+  fetchMe,
+  forgotPassword,
+  login,
+  logout,
+  logoutAll,
+  resetPassword,
+  switchOrganization,
+  updateMe,
+  verifyMfa,
+} from "./api";
 
 /** Estado de la sesión; `null` durante el render del servidor (desconocido). */
 export function useSessionStatus(): SessionStatus | null {
@@ -24,12 +40,33 @@ export function useMe(enabled = true) {
   return useQuery({ queryKey: meQueryKey, queryFn: ({ signal }) => fetchMe(signal), enabled });
 }
 
+/** `POST /v1/auth/login`: devuelve la sesión o el reto de segundo factor (no guarda nada). */
 export function useLogin() {
+  return useMutation({ mutationFn: login });
+}
+
+export function useVerifyMfa() {
+  return useMutation({ mutationFn: verifyMfa });
+}
+
+export function useEnrollMfa() {
+  return useMutation({ mutationFn: enrollMfa });
+}
+
+export function useConfirmMfaEnrollment() {
+  return useMutation({ mutationFn: confirmMfaEnrollment });
+}
+
+/**
+ * Abre la sesión ya obtenida (login, segundo factor o invitación): acceso en memoria y caché
+ * vacía, para no mostrar ni un instante datos de otra persona.
+ */
+export function useStartSession() {
   const client = useQueryClient();
-  return useMutation({
-    mutationFn: login,
-    onSuccess: () => client.removeQueries(),
-  });
+  return (session: SessionResponse) => {
+    client.removeQueries();
+    applySession(session);
+  };
 }
 
 /** Cierra la sesión (revocación en el backend y después local) y vacía la caché. */
@@ -41,13 +78,21 @@ export function useLogout() {
   };
 }
 
+/** Cierra todas las sesiones de la persona (`POST /v1/auth/logout-all`). */
+export function useLogoutAll() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: logoutAll,
+    onSettled: () => client.clear(),
+  });
+}
+
 const isMeQuery = (key: readonly unknown[]) => key[0] === meQueryKey[0] && key[1] === meQueryKey[1];
 
 /**
  * Cambia la organización activa. Los datos de la anterior no deben verse ni un instante: se
  * descartan las consultas inactivas y se reinician las activas (vuelven a cargar con el token
- * nuevo). `me` se actualiza al momento con la respuesta (membresías y organización activa) y
- * se vuelve a leer en segundo plano, así el shell no se desmonta.
+ * nuevo). `me` se actualiza al momento con la respuesta.
  */
 export function useSwitchOrganization() {
   const client = useQueryClient();
@@ -75,5 +120,33 @@ export function useUpdateMe() {
   return useMutation({
     mutationFn: updateMe,
     onSuccess: () => client.invalidateQueries({ queryKey: meQueryKey }),
+  });
+}
+
+export function useChangePassword() {
+  return useMutation({ mutationFn: changePassword });
+}
+
+export function useForgotPassword() {
+  return useMutation({ mutationFn: forgotPassword });
+}
+
+export function useResetPassword() {
+  return useMutation({ mutationFn: resetPassword });
+}
+
+/** Vista previa pública de una invitación. */
+export function useInvitation(token: string) {
+  return useQuery({
+    queryKey: ["invitations", token],
+    queryFn: ({ signal }) => fetchInvitation(token, signal),
+    staleTime: 0,
+  });
+}
+
+export function useAcceptInvitation(token: string) {
+  return useMutation({
+    mutationFn: ({ body, withSession }: { body: { fullName?: string; password?: string }; withSession: boolean }) =>
+      acceptInvitation(token, body, withSession),
   });
 }

@@ -22,6 +22,8 @@ export const fmtDateTime = (iso: string) =>
     year: "numeric",
     hour: "2-digit",
     minute: "2-digit",
+    // 24 h: evita el "p. m." de es-BO (y que el recorte del punto del mes lo deje en "p m.").
+    hourCycle: "h23",
     timeZone: "UTC",
   })
     .format(new Date(iso))
@@ -57,3 +59,41 @@ export function parseDecimal(
 
 /** Cifra para un campo editable, con coma decimal y sin separador de miles ("4,2"). */
 export const numberToInput = (n: number | null | undefined) => (n == null ? "" : String(n).replace(".", ","));
+
+/**
+ * Tiempo relativo en español: "hace 12 min", "hace 3 h", "ayer", "hace 4 días"; a partir de una
+ * semana, la fecha. `now` es inyectable para las pruebas.
+ */
+export function fmtRelative(iso: string, now: number = Date.now()): string {
+  const diff = now - Date.parse(iso);
+  if (!Number.isFinite(diff)) return "—";
+  const minutes = Math.round(diff / 60_000);
+  if (minutes < 1) return "ahora";
+  if (minutes < 60) return `hace ${minutes} min`;
+  const hours = Math.round(minutes / 60);
+  if (hours < 24) return `hace ${hours} h`;
+  const days = Math.round(hours / 24);
+  if (days === 1) return "ayer";
+  if (days < 7) return `hace ${days} días`;
+  return fmtDate(iso);
+}
+
+/** Fecha y hora en la zona horaria de quien mira (reuniones agendadas): "3 oct 2026, 10:30". */
+export const fmtLocalDateTime = (iso: string) =>
+  new Intl.DateTimeFormat(LOCALE, {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  })
+    .format(new Date(iso))
+    .replace(".", "");
+
+/** Valor de un `<input type="datetime-local">` ("2026-10-03T10:30", hora local) → ISO en UTC. */
+export function localInputToIso(local: string): string | null {
+  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?$/.test(local)) return null;
+  const ms = new Date(local).getTime();
+  return Number.isFinite(ms) ? new Date(ms).toISOString() : null;
+}

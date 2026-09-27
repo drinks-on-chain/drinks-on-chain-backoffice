@@ -14,9 +14,15 @@ function MocksGate({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(!env.mocks);
   useEffect(() => {
     if (!env.mocks) return;
-    // MSW responde en /api/v1/* de este origen (P-1).
+    // MSW responde en /api/v1/* de este origen (P-1). Los enlaces de los correos del buzón
+    // simulado que llevan al back office apuntan a este mismo origen (sea cual sea el puerto).
     import("@drinks-on-chain/mocks/browser")
-      .then(({ startMockWorker }) => startMockWorker({ quiet: true }))
+      .then(({ startMockWorker }) =>
+        startMockWorker({
+          quiet: true,
+          appUrls: { BACKOFFICE: window.location.origin, ...(env.urlErp ? { ERP: env.urlErp } : {}) },
+        }),
+      )
       .then(() => setReady(true));
   }, []);
   if (!ready) {
