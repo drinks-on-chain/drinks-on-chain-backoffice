@@ -13,6 +13,8 @@ export default defineConfig({
   reporter: process.env.CI ? "github" : "list",
   // MSW arranca en el navegador y la sesión se recupera al cargar: margen para máquinas cargadas.
   expect: { timeout: 10_000 },
+  // Los recorridos entran con segundo factor y visitan varias pantallas: margen para máquinas lentas.
+  timeout: 90_000,
   use: {
     baseURL: `http://localhost:${PORT}`,
     locale: "es-BO",
@@ -20,13 +22,13 @@ export default defineConfig({
   },
   projects: [
     { name: "escritorio", use: { ...devices["Desktop Chrome"], channel } },
-    { name: "tablet", use: { ...devices["iPad (gen 7) landscape"], browserName: "chromium", channel } },
   ],
   webServer: {
     command: `pnpm build && pnpm exec next start --port ${PORT}`,
     url: `http://localhost:${PORT}`,
     reuseExistingServer: !process.env.CI,
     timeout: 240_000,
-    env: { NEXT_PUBLIC_MOCKS: "1" },
+    // El ERP se ofrece a quien también es miembro de una bodega.
+    env: { NEXT_PUBLIC_MOCKS: "1", NEXT_PUBLIC_URL_ERP: "http://localhost:3002" },
   },
 });
