@@ -112,7 +112,7 @@ function SettingScreen({ setting: s }: { setting: SettingDefinition }) {
           title={s.description}
           actions={
             <Button asChild variant="tertiary">
-              <Link href={`/bitacora?recurso=SETTING&recursoId=${encodeURIComponent(s.key)}`}>Ver en la bitácora</Link>
+              <Link href={`/bitacora?recurso=setting&recursoId=${encodeURIComponent(s.key)}`}>Ver en la bitácora</Link>
             </Button>
           }
         />
