@@ -3,13 +3,13 @@
 import { useEffect, useReducer, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import type { LoginResponse } from "@drinks-on-chain/mocks";
 import { Alert, AuthLayout, Button, Field, Input, TextLink } from "@drinks-on-chain/ui";
 import { MfaSteps, mfaStepTitle } from "@/components/auth/mfa-steps";
 import { ApiError, errorMessage } from "@/lib/api/errors";
 import { fieldErrorsFrom } from "@/lib/api/field-errors";
-import { useIsAuthenticated, useLogin, useStartSession } from "@/lib/auth/hooks";
+import { useIsAuthenticated, useLogin, useSessionEndReason, useStartSession } from "@/lib/auth/hooks";
 import { initialLoginFlow, loginFlowReducer, type LoginFlowState, type MfaNotice } from "@/lib/auth/login-flow";
+import type { LoginResponse } from "@/lib/auth/schemas";
 import { es } from "@/lib/i18n/es";
 
 const NOTICES: Record<MfaNotice, string> = { expired: es.mfa.expired, "too-many-attempts": es.mfa.tooMany };
@@ -51,6 +51,8 @@ type CredentialsProps = {
 
 function CredentialsForm({ state, onResponse }: CredentialsProps) {
   const login = useLogin();
+  // Sesión cerrada sin querer (revocada o caducada), también al recargar: se avisa hasta que se intente entrar.
+  const endReason = useSessionEndReason();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
@@ -71,7 +73,11 @@ function CredentialsForm({ state, onResponse }: CredentialsProps) {
           ? errorMessage(error)
           : state.notice
             ? NOTICES[state.notice]
-            : null;
+            : endReason && login.isIdle
+              ? endReason === "revoked"
+                ? es.auth.revoked
+                : es.auth.expired
+              : null;
 
   return (
     <form onSubmit={onSubmit} className="grid gap-4" noValidate>

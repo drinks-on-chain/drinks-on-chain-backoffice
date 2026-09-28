@@ -129,6 +129,41 @@ test("acceso con TOTP: código incorrecto, código válido y recarga", async () 
   expect(errors).toEqual([]);
 });
 
+test("H1: renovación y cambio de organización solo con la cookie, y recarga", async () => {
+  // Por el proxy de la app, como el cliente de API: sin `refreshToken` en el cuerpo. Solo se
+  // devuelven códigos de estado y la organización (nada de tokens sale de la página).
+  const result = await admin.evaluate(async () => {
+    const headers = { "Content-Type": "application/json", Accept: "application/json", "X-Client-App": "BACKOFFICE" };
+    const refresh = await fetch("/api/v1/auth/refresh", {
+      method: "POST",
+      credentials: "include",
+      headers,
+      body: "{}",
+    });
+    const session = (await refresh.json()) as {
+      data?: { activeOrganizationId?: string | null; tokens?: { accessToken?: string } };
+    };
+    const organizationId = session.data?.activeOrganizationId ?? null;
+    const switched = await fetch("/api/v1/auth/switch-organization", {
+      method: "POST",
+      credentials: "include",
+      headers: { ...headers, Authorization: `Bearer ${session.data?.tokens?.accessToken ?? ""}` },
+      body: JSON.stringify({ organizationId }),
+    });
+    const after = (await switched.json()) as { data?: { activeOrganizationId?: string | null } };
+    return {
+      refresh: refresh.status,
+      switch: switched.status,
+      sameOrganization: after.data?.activeOrganizationId === organizationId,
+    };
+  });
+  expect(result).toEqual({ refresh: 200, switch: 200, sameOrganization: true });
+  // La cookie rotada por el cambio sigue valiendo para recuperar la sesión al recargar.
+  await admin.reload();
+  await expect(admin.getByRole("heading", { name: "Tablero", level: 1 })).toBeVisible();
+  expect(errors).toEqual([]);
+});
+
 test("usuarios internos: invitar y aceptar desde el correo con inscripción del TOTP", async ({ browser }) => {
   withMail();
   const { email, name, password } = state.internal;

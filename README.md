@@ -85,6 +85,8 @@ Vercel (framework Next.js, `pnpm build`, Node 22): producción desde `main`, pre
 
 **IP real del cliente** (O1-OPS-1, de la plantilla): `src/proxy.ts` (`src/lib/api-proxy.ts`) reescribe `/api/v1/*` al backend sin tocar método, cuerpo (en streaming, sin límite de tamaño de función), cookies ni respuesta (`Set-Cookie`, `Retry-After`, `Content-Disposition`), y con `PROXY_SHARED_SECRET` añade `X-DOC-Client-IP`, `X-DOC-Proxy-Timestamp` y `X-DOC-Proxy-Signature` (HMAC-SHA256 de `MÉTODO|RUTA_CON_QUERY|IP|TIMESTAMP`, query canónica). La IP sale de `x-real-ip`/`x-forwarded-for`, que en Vercel pone la plataforma; fuera de Vercel hace falta un proxy delante que los reescriba. Las `X-DOC-*` del cliente se descartan.
 
+**Sesión tras el cierre de la Ola 1 (H1, de la plantilla)**: el refresco viaja solo en la cookie `doc_rt` (ni `refresh` ni `switch-organization` llevan `refreshToken` en el cuerpo; el que aún llegue en una respuesta se ignora); la sesión, el login con segundo factor y `me` se validan con `src/lib/auth/schemas.ts`, sin `user.userRole/wineryId/memberRole`; `PATCH /v1/users/me` devuelve `me` completo y los `details` solo se leen como `{ field, message }`. Si la sesión se revoca (bloqueo, reutilización del refresco), el login avisa "Tu sesión se cerró por seguridad", también tras recargar.
+
 ## Paquetes compartidos
 
 `@drinks-on-chain/ui` y `@drinks-on-chain/mocks` se instalan desde el tarball de su GitHub Release (hoy `ui` 0.3.0-rc.2 y `mocks` 0.4.0-rc.1, alineado con el backend de la Ola 1):

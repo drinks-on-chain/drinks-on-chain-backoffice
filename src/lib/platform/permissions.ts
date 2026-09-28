@@ -1,4 +1,5 @@
-import type { MeResponse, Membership, PlatformRole, PlatformUser } from "@drinks-on-chain/mocks";
+import type { Membership, PlatformRole, PlatformUser } from "@drinks-on-chain/mocks";
+import type { MeResponse } from "@/lib/auth/schemas";
 import { activeMembership, isUsableMembership } from "@/lib/auth/organization";
 
 // Quién puede qué en el back office (contrato de la Ola 1 §9 y matriz de docs-back/05 §3). El

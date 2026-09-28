@@ -73,3 +73,12 @@ Sub-etapas 4A–4F de `docs-front/03-roadmap-frontend.md` v3 §8, ordenadas por 
 - [x] Ola 1 · 4A: teclado completo, paginación (`limit` ≤ 100) y ordenación en la tabla de usuarios, Playwright del recorrido · 2026-09-27
 - [x] Ola 1 · 4B: filtros y página en la URL, paginación (`limit` ≤ 100) y ordenación en todas las listas; Playwright con mocks: solicitud tomar → reunión → aprobar → correo del buzón → aceptar → bodega activa con prefijo, rechazo, alta directa, suspender y verlo en la bitácora, bloquear miembro y cuenta completa, mínimo legal (rechazo y excepción), CSV, verificación de la cadena, soporte sin escritura; axe en todas las pantallas y diálogos nuevos; teclado (detalle de la bitácora, pestañas, ⌘K) · 2026-09-27
 - [ ] Recorrido H1 con el repo `drinks-on-chain-e2e`
+
+## Cierre de la Ola 1 (H1) · retirada de la compatibilidad transitoria
+
+Contrato: `plan/contratos/o1-backoffice-y-bodegas.md` §11 y `o0-sesiones-y-estandares.md` §5. Llega con la plantilla (`git merge template/dev`).
+
+- [x] Sin `refreshToken` en el cuerpo: ni se guarda ni se reenvía en `refresh` ni en `switch-organization` (aceptar una invitación ya no lo enviaba); el de la respuesta se ignora · 2026-09-27
+- [x] Login, segundo factor, sesión y `me` con los esquemas de `src/lib/auth/schemas.ts` (sin `tokens.refreshToken` ni `user.userRole/wineryId/memberRole`); `/__mocks` muestra el rol de la membresía activa · 2026-09-27
+- [x] `PATCH /v1/users/me` solo con `{ user, memberships, activeOrganizationId }`; `details` solo como `{ field, message }` · 2026-09-27
+- [x] Aviso "Tu sesión se cerró por seguridad" en el login también al recargar con una sesión revocada (unitaria y E2E) · 2026-09-27

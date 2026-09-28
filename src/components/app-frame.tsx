@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, type ReactNode } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Building2, ExternalLink, Inbox, KeyRound, LogOut, UserPlus, UserRound } from "lucide-react";
-import type { MeResponse } from "@drinks-on-chain/mocks";
+import type { MeResponse } from "@/lib/auth/schemas";
 import {
   AdminShell,
   Button,

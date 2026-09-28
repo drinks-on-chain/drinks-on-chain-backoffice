@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import type { MeResponse, Membership, PlatformUser } from "@drinks-on-chain/mocks";
+import type { Membership, PlatformUser } from "@drinks-on-chain/mocks";
+import type { MeResponse } from "@/lib/auth/schemas";
 import {
   can,
   canActOnUser,
