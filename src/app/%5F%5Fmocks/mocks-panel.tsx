@@ -50,9 +50,6 @@ const SCENARIO_LABELS: Record<ScenarioName, string> = {
   offline: "Sin conexión",
 };
 
-/** Rol en la organización activa (los permisos salen de la membresía, no del rol global de 0.1). */
-const activeRoleOf = (u: DemoUser) => u.memberships.find((m) => m.organizationId === u.activeOrganizationId)?.role;
-
 export function MocksPanel() {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -195,7 +192,7 @@ export function MocksPanel() {
           columns={[
             { id: "name", header: "Nombre", cell: (u) => u.fullName },
             { id: "email", header: "Correo", cell: (u) => u.email },
-            { id: "role", header: "Rol", cell: (u) => <Badge>{roleLabel(activeRoleOf(u))}</Badge> },
+            { id: "role", header: "Rol", cell: (u) => <Badge>{roleLabel(u.role)}</Badge> },
             { id: "winery", header: "Bodega activa", cell: (u) => u.wineryName ?? "—" },
             enterColumn,
           ]}

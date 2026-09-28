@@ -3,7 +3,7 @@ import { getAccessToken, resetSessionForTests, setSession } from "@/lib/api/sess
 import { ok, stubFetch } from "@/test/utils";
 import { acceptInvitation, login, switchOrganization, updateMe } from "./api";
 
-/** Respuesta de sesión tal como queda en H1: sin `refreshToken` ni `userRole/wineryId/memberRole`. */
+/** Respuesta de sesión tras H1: sin `refreshToken` ni `userRole/wineryId/memberRole`. */
 const session = {
   user: { id: "u1", email: "a@b.test", fullName: "A", preferredLocale: "es", audience: "STAFF" },
   memberships: [],
@@ -35,17 +35,12 @@ describe("sesión y cuenta tras H1", () => {
     expect(getAccessToken()).toBe("a2");
   });
 
-  it("el login ignora refreshToken y los campos de 0.1 si aún llegan", async () => {
-    fetchMock.mockResolvedValueOnce(
-      ok({
-        ...session,
-        user: { ...session.user, userRole: "PLATFORM_ADMIN", wineryId: null, memberRole: null },
-        tokens: { ...session.tokens, refreshToken: "sid.1.secreto" },
-      }),
-    );
+  it("el login guarda el acceso de la sesión (sin refreshToken en el cuerpo)", async () => {
+    fetchMock.mockResolvedValueOnce(ok(session));
     const res = await login({ email: "a@b.test", password: "x" });
-    expect(res).not.toHaveProperty("user.userRole");
+    expect(res).toMatchObject({ activeOrganizationId: "platform" });
     expect(res).not.toHaveProperty("tokens.refreshToken");
+    expect(getAccessToken()).toBe("a2");
   });
 
   it("aceptar con cuenta existente envía `{}` con la sesión (sin refresco en el cuerpo)", async () => {
