@@ -89,7 +89,7 @@ Vercel (framework Next.js, `pnpm build`, Node 22): producción desde `main`, pre
 
 ## Paquetes compartidos
 
-`@drinks-on-chain/ui` y `@drinks-on-chain/mocks` se instalan desde el tarball de su GitHub Release (hoy `ui` 0.3.1 y `mocks` 0.4.0, alineado con el backend de la Ola 1 tras la retirada de H1):
+`@drinks-on-chain/ui` y `@drinks-on-chain/mocks` se instalan desde el tarball de su GitHub Release (hoy `ui` 0.3.1 y `mocks` 0.4.1, alineado con el backend `v0.1.1`: Ola 1 tras la retirada de H1 más la lista de espera):
 
 ```bash
 pnpm add https://github.com/drinks-on-chain/drinks-on-chain-design-system/releases/download/vX.Y.Z/drinks-on-chain-ui-X.Y.Z.tgz
