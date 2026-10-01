@@ -32,7 +32,7 @@ import { PageHeader } from "@/components/page-header";
 import { SearchField } from "@/components/search-field";
 import { errorMessage } from "@/lib/api/errors";
 import { useMe } from "@/lib/auth/hooks";
-import { fmtDateTime, fmtNumber } from "@/lib/format";
+import { fmtDate, fmtDateTime, fmtNumber } from "@/lib/format";
 import { saveFile } from "@/lib/platform/audit";
 import { WAITLIST_STATUS_TONES, waitlistDrinkLabel, waitlistStatusLabel } from "@/lib/platform/labels";
 import { can } from "@/lib/platform/permissions";
@@ -188,123 +188,7 @@ function WaitlistList({
       : []),
   ];
 
-  const text = (value: string | null, className = "max-w-44") =>
-    value ? (
-      <span className={`block truncate ${className}`} title={value}>
-        {value}
-      </span>
-    ) : (
-      <span className="text-fg-subtle">—</span>
-    );
-
-  const position: DataTableColumn<WaitlistEntry> = {
-    id: "position",
-    header: "Orden",
-    accessor: "position",
-    numeric: true,
-    width: "72px",
-    cell: (e) => <span className="text-fg-subtle tabular-nums">{fmtNumber(e.position)}</span>,
-  };
-  const person = (header: string, hideBelow?: "md"): DataTableColumn<WaitlistEntry> => ({
-    id: "fullName",
-    header,
-    accessor: "fullName",
-    hideBelow,
-    cell: (e) => (winery ? text(e.fullName) : <span className="font-medium">{text(e.fullName, "max-w-56")}</span>),
-  });
-  const email = (hideBelow: "md" | "lg"): DataTableColumn<WaitlistEntry> => ({
-    id: "email",
-    header: "Correo",
-    accessor: "email",
-    hideBelow,
-    cell: (e) => text(e.email, "max-w-56"),
-  });
-  const phone = (hideBelow: "lg" | "xl"): DataTableColumn<WaitlistEntry> => ({
-    id: "phone",
-    header: "WhatsApp",
-    accessor: (e) => e.phone ?? "",
-    hideBelow,
-    cell: (e) =>
-      e.phone ? (
-        <span className="whitespace-nowrap tabular-nums">{e.phone}</span>
-      ) : (
-        <span className="text-fg-subtle">—</span>
-      ),
-  });
-  const tail: DataTableColumn<WaitlistEntry>[] = [
-    {
-      id: "source",
-      header: "Origen",
-      accessor: (e) => e.source ?? "",
-      hideBelow: "xl",
-      cell: (e) =>
-        e.source ? (
-          <span className="font-mono text-xs">{e.source}</span>
-        ) : (
-          <span className="text-fg-subtle">Sin origen</span>
-        ),
-    },
-    {
-      id: "createdAt",
-      header: "Fecha",
-      accessor: "createdAt",
-      cell: (e) => (
-        <time dateTime={e.createdAt} className="whitespace-nowrap tabular-nums">
-          {fmtDateTime(e.createdAt)}
-        </time>
-      ),
-    },
-    {
-      id: "status",
-      header: "Estado",
-      accessor: "status",
-      cell: (e) => <Badge tone={WAITLIST_STATUS_TONES[e.status] ?? "neutral"}>{waitlistStatusLabel(e.status)}</Badge>,
-    },
-  ];
-
-  const columns: DataTableColumn<WaitlistEntry>[] = winery
-    ? [
-        position,
-        {
-          id: "wineryName",
-          header: "Bodega",
-          accessor: (e) => e.wineryName ?? "",
-          cell: (e) => <span className="font-medium">{text(e.wineryName, "max-w-56")}</span>,
-        },
-        person("Contacto", "md"),
-        email("lg"),
-        phone("xl"),
-        {
-          id: "region",
-          header: "Región",
-          accessor: (e) => e.region ?? "",
-          hideBelow: "lg",
-          cell: (e) => text(e.region),
-        },
-        {
-          id: "produces",
-          header: "Produce",
-          accessor: (e) => e.produces ?? "",
-          hideBelow: "xl",
-          cell: (e) => waitlistDrinkLabel(e.produces),
-        },
-        ...tail,
-      ]
-    : [
-        position,
-        person("Nombre"),
-        email("md"),
-        phone("lg"),
-        { id: "city", header: "Ciudad", accessor: (e) => e.city ?? "", hideBelow: "lg", cell: (e) => text(e.city) },
-        {
-          id: "interest",
-          header: "Interés",
-          accessor: (e) => e.interest ?? "",
-          hideBelow: "xl",
-          cell: (e) => waitlistDrinkLabel(e.interest),
-        },
-        ...tail,
-      ];
+  const columns = waitlistColumns(filters.type);
 
   return (
     <>
@@ -316,6 +200,7 @@ function WaitlistList({
       >
         <SearchField
           label="Buscar"
+          className="w-72"
           placeholder={winery ? "Bodega, contacto, correo o teléfono" : "Nombre, correo o teléfono"}
           // El texto de la URL tal cual (el campo lo sigue); la API recibe como mucho 200 caracteres.
           value={url.get(P.q) ?? ""}
@@ -370,7 +255,7 @@ function WaitlistList({
             title={filtered ? "Ninguna inscripción coincide" : "Aún no hay inscripciones"}
             description={
               filtered
-                ? "Prueba con otro estado, origen o fechas."
+                ? "Prueba con otra búsqueda, estado, origen o fechas."
                 : winery
                   ? "Cuando una bodega se apunte desde el sitio de bodegas, aparecerá aquí."
                   : "Cuando alguien se apunte desde la página principal, aparecerá aquí."
@@ -415,4 +300,149 @@ function WaitlistList({
       />
     </>
   );
+}
+
+/**
+ * Desde qué ancho de pantalla cabe cada columna sin desplazar la tabla (el contenido mide el
+ * ancho menos la barra lateral). Lo que no cabe se ve siempre en el detalle.
+ */
+const FROM = {
+  md: "max-md:hidden",
+  xl: "max-xl:hidden",
+  "2xl": "max-2xl:hidden",
+  1600: "max-[1599px]:hidden",
+  1800: "max-[1799px]:hidden",
+  1920: "max-[1919px]:hidden",
+} as const;
+
+type Column = DataTableColumn<WaitlistEntry>;
+
+const from = (width: keyof typeof FROM): Pick<Column, "className" | "headerClassName"> => ({
+  className: FROM[width],
+  headerClassName: FROM[width],
+});
+
+const dash = <span className="text-fg-subtle">—</span>;
+
+/** Texto en una línea, recortado con su valor completo en `title`. */
+const text = (value: string | null, width: string) =>
+  value ? (
+    <span className={`block truncate ${width}`} title={value}>
+      {value}
+    </span>
+  ) : (
+    dash
+  );
+
+/** Columnas de la tabla según el tipo: las de la persona (consumidor) o las de la bodega. */
+function waitlistColumns(type: WaitlistType): Column[] {
+  const winery = type === "WINERY";
+  const position: Column = {
+    id: "position",
+    header: "Orden",
+    accessor: "position",
+    numeric: true,
+    width: "64px",
+    cell: (e) => <span className="text-fg-subtle tabular-nums">{fmtNumber(e.position)}</span>,
+  };
+  const email: Column = { id: "email", header: "Correo", accessor: "email", cell: (e) => text(e.email, "max-w-44") };
+  const phone: Column = {
+    id: "phone",
+    header: "WhatsApp",
+    accessor: (e) => e.phone ?? "",
+    cell: (e) => (e.phone ? <span className="whitespace-nowrap tabular-nums">{e.phone}</span> : dash),
+  };
+  const source: Column = {
+    id: "source",
+    header: "Origen",
+    accessor: (e) => e.source ?? "",
+    cell: (e) =>
+      e.source ? (
+        <span className="font-mono text-xs whitespace-nowrap">{e.source}</span>
+      ) : (
+        <span className="whitespace-nowrap text-fg-subtle">Sin origen</span>
+      ),
+  };
+  const createdAt: Column = {
+    id: "createdAt",
+    header: "Fecha",
+    accessor: "createdAt",
+    cell: (e) => (
+      <time dateTime={e.createdAt} title={fmtDateTime(e.createdAt)} className="whitespace-nowrap tabular-nums">
+        {fmtDate(e.createdAt)}
+      </time>
+    ),
+  };
+  const status: Column = {
+    id: "status",
+    header: "Estado",
+    accessor: "status",
+    cell: (e) => <Badge tone={WAITLIST_STATUS_TONES[e.status] ?? "neutral"}>{waitlistStatusLabel(e.status)}</Badge>,
+  };
+
+  if (winery) {
+    return [
+      position,
+      {
+        id: "wineryName",
+        header: "Bodega",
+        accessor: (e) => e.wineryName ?? "",
+        cell: (e) => <span className="font-medium">{text(e.wineryName, "max-w-48")}</span>,
+      },
+      {
+        id: "fullName",
+        header: "Contacto",
+        accessor: "fullName",
+        cell: (e) => text(e.fullName, "max-w-36"),
+        ...from("xl"),
+      },
+      { ...email, ...from("xl") },
+      { ...phone, ...from("2xl") },
+      {
+        id: "region",
+        header: "Región",
+        accessor: (e) => e.region ?? "",
+        cell: (e) => text(e.region, "max-w-32"),
+        ...from(1600),
+      },
+      {
+        id: "produces",
+        header: "Produce",
+        accessor: (e) => e.produces ?? "",
+        cell: (e) => <span className="whitespace-nowrap">{waitlistDrinkLabel(e.produces)}</span>,
+        ...from(1920),
+      },
+      { ...source, ...from(1800) },
+      createdAt,
+      status,
+    ];
+  }
+  return [
+    position,
+    {
+      id: "fullName",
+      header: "Nombre",
+      accessor: "fullName",
+      cell: (e) => <span className="font-medium">{text(e.fullName, "max-w-40")}</span>,
+    },
+    { ...email, ...from("md") },
+    { ...phone, ...from("xl") },
+    {
+      id: "city",
+      header: "Ciudad",
+      accessor: (e) => e.city ?? "",
+      cell: (e) => text(e.city, "max-w-28"),
+      ...from("2xl"),
+    },
+    {
+      id: "interest",
+      header: "Interés",
+      accessor: (e) => e.interest ?? "",
+      cell: (e) => <span className="whitespace-nowrap">{waitlistDrinkLabel(e.interest)}</span>,
+      ...from(1600),
+    },
+    { ...source, ...from("2xl") },
+    createdAt,
+    status,
+  ];
 }
