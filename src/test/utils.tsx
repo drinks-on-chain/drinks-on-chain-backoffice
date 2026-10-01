@@ -2,7 +2,8 @@ import type { ReactElement } from "react";
 import { render } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { vi } from "vitest";
-import type { MeResponse, PlatformRole } from "@drinks-on-chain/mocks";
+import type { PlatformRole } from "@drinks-on-chain/mocks";
+import type { MeResponse } from "@/lib/auth/schemas";
 import { meQueryKey } from "@/lib/auth/hooks";
 
 /** Respuesta de éxito del envoltorio del backend. */

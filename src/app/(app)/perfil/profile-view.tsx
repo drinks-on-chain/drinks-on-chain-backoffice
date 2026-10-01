@@ -16,7 +16,7 @@ import {
   SkeletonText,
   toast,
 } from "@drinks-on-chain/ui";
-import type { MeResponse } from "@drinks-on-chain/mocks";
+import type { MeResponse } from "@/lib/auth/schemas";
 import { PageHeader } from "@/components/page-header";
 import { errorMessage } from "@/lib/api/errors";
 import { fieldErrorsFrom } from "@/lib/api/field-errors";

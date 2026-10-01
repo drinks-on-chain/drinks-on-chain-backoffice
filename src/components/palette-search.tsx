@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Building2, Inbox, Search } from "lucide-react";
-import type { MeResponse } from "@drinks-on-chain/mocks";
+import type { MeResponse } from "@/lib/auth/schemas";
 import { getStatusBadge, matchesQuery, type CommandPaletteGroup, type CommandPaletteItem } from "@drinks-on-chain/ui";
 import { useApplications } from "@/lib/platform/applications";
 import { can } from "@/lib/platform/permissions";

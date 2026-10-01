@@ -89,6 +89,8 @@ describe("acciones con motivo sobre un usuario interno", () => {
     lastLoginAt: null,
     mfaEnabled: true,
     invitationId: null,
+    accountStatus: "ACTIVE",
+    accountBlockedReason: null,
   } satisfies PlatformUser;
 
   beforeEach(() => {

@@ -3,7 +3,8 @@
 import { useEffect, useReducer, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import type { InvitationPreview, LoginResponse } from "@drinks-on-chain/mocks";
+import type { InvitationPreview } from "@drinks-on-chain/mocks";
+import type { LoginResponse } from "@/lib/auth/schemas";
 import {
   Alert,
   AuthLayout,

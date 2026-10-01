@@ -14,7 +14,7 @@ import {
   UserX,
   type LucideIcon,
 } from "lucide-react";
-import { WINERY_ROLES, type Member, type WineryDetail, type WineryRole } from "@drinks-on-chain/mocks";
+import { WINERY_ROLES, type Invitation, type Member, type WineryDetail, type WineryRole } from "@drinks-on-chain/mocks";
 import {
   Alert,
   Button,
@@ -32,6 +32,7 @@ import {
   SlideOver,
   StatusBadge,
   TextLink,
+  getStatusBadge,
   Textarea,
   toast,
   type MenuEntry,
@@ -42,12 +43,11 @@ import { ApiError, errorMessage } from "@/lib/api/errors";
 import { fieldErrorsFrom } from "@/lib/api/field-errors";
 import { useMe } from "@/lib/auth/hooks";
 import { fmtDate, fmtDateTime, fmtRelative } from "@/lib/format";
-import type { DerivedInvitation } from "@/lib/platform/derive";
 import { validateInvite, type FormErrors, type InviteForm } from "@/lib/platform/forms";
 import { roleLabel } from "@/lib/platform/labels";
 import { can } from "@/lib/platform/permissions";
 import {
-  useAccountStatus,
+  useAccount,
   useChangeMemberRole,
   useInviteMember,
   useManageOrganizationInvitation,
@@ -67,12 +67,12 @@ const ASSIGNABLE: WineryRole[] = WINERY_ROLES.filter((r): r is WineryRole => r !
 type MemberDialog =
   | { kind: "role" | "block" | "unblock" | "password"; member: Member }
   | { kind: "account-block" | "account-unblock"; member: Member }
-  | { kind: "resend" | "revoke"; invitation: DerivedInvitation };
+  | { kind: "resend" | "revoke"; invitation: Invitation };
 
 const teamOpen = (w: WineryDetail) => w.status === "ACTIVE" || w.status === "SUSPENDED";
 
 /** Quién bloqueó: el dueño no puede levantar un bloqueo de la plataforma. */
-const blockedByLabel = (m: Member) =>
+const blockedByLabel = (m: Pick<Member, "blockedBy">) =>
   m.blockedBy === "PLATFORM"
     ? "Bloqueado por la plataforma"
     : m.blockedBy === "OWNER"
@@ -126,8 +126,6 @@ export function TeamPanel({ winery }: { winery: WineryDetail }) {
     );
     return entries;
   }
-
-  const pending = (invitations.data ?? []).filter((i) => i.status === "PENDING" || i.status === "EXPIRED");
 
   return (
     <div className="grid gap-5">
@@ -293,7 +291,7 @@ export function TeamPanel({ winery }: { winery: WineryDetail }) {
             caption={`Invitaciones de ${winery.tradeName}`}
             captionHidden
             density="compact"
-            data={pending}
+            data={invitations.data ?? []}
             getRowId={(i) => i.id}
             empty={<p className="p-4 text-fg-muted">No hay invitaciones pendientes.</p>}
             columns={[
@@ -313,18 +311,18 @@ export function TeamPanel({ winery }: { winery: WineryDetail }) {
               {
                 id: "expires",
                 header: "Caduca",
-                accessor: (i) => i.expiresAt ?? "",
-                cell: (i) => (i.expiresAt ? <time dateTime={i.expiresAt}>{fmtDateTime(i.expiresAt)}</time> : "—"),
+                accessor: "expiresAt",
+                cell: (i) => <time dateTime={i.expiresAt}>{fmtDateTime(i.expiresAt)}</time>,
               },
               {
                 id: "by",
                 header: "Invitó",
-                accessor: (i) => i.invitedBy ?? "",
+                accessor: (i) => i.invitedBy.fullName,
                 hideBelow: "lg",
                 cell: (i) => (
                   <span>
-                    {i.invitedBy ?? "Sistema"}
-                    {i.viaPlatform && <span className="text-xs text-fg-subtle"> · plataforma</span>}
+                    {i.invitedBy.fullName}
+                    {i.invitedBy.viaPlatform && <span className="text-xs text-fg-subtle"> · plataforma</span>}
                   </span>
                 ),
               },
@@ -559,7 +557,7 @@ function TeamActionDialog({
   const changeRole = useChangeMemberRole(winery.id);
   const setBlocked = useSetMemberBlocked(winery.id);
   const sendReset = useSendMemberPasswordReset();
-  const account = useSetAccountBlocked();
+  const account = useSetAccountBlocked(winery.id);
   const invitation = useManageOrganizationInvitation(winery.id);
 
   function run(reason: string): Promise<unknown> {
@@ -606,7 +604,7 @@ function TeamActionDialog({
 // Persona
 // ---------------------------------------------------------------------------
 
-/** Panel de una persona del equipo: su membresía, el estado de su cuenta y las acciones sobre ella. */
+/** Panel de una persona del equipo: su membresía, su cuenta completa (estado y membresías) y las acciones. */
 function PersonPanel({
   winery,
   member,
@@ -619,10 +617,11 @@ function PersonPanel({
   onAction: (d: MemberDialog) => void;
 }) {
   const me = useMe();
-  const account = useAccountStatus(member?.userId ?? null);
+  const account = useAccount(member?.userId ?? null);
   const isSelf = member?.userId === me.data?.user.id;
   const canAccount = can(me.data, "accounts.block") && !isSelf;
-  const status = account.data;
+  const detail = account.data;
+  const blocked = detail?.status === "BLOCKED";
 
   return (
     <SlideOver
@@ -657,10 +656,24 @@ function PersonPanel({
                 term: "Cuenta completa",
                 value: account.isPending ? (
                   <SkeletonText lines={1} />
-                ) : status?.blocked ? (
+                ) : account.isError ? (
+                  <span className="text-xs text-fg-muted">
+                    No se pudo leer la cuenta: {errorMessage(account.error)}{" "}
+                    <Button size="sm" variant="tertiary" onClick={() => void account.refetch()}>
+                      Reintentar
+                    </Button>
+                  </span>
+                ) : blocked ? (
                   <span className="grid justify-items-start gap-0.5">
                     <StatusBadge kind="member" status="BLOCKED" label="Cuenta bloqueada" />
-                    {status.reason && <span className="text-xs text-fg-muted">Motivo: {status.reason}</span>}
+                    {detail?.blockedReason && (
+                      <span className="text-xs text-fg-muted">Motivo: {detail.blockedReason}</span>
+                    )}
+                    {detail?.blockedAt && (
+                      <span className="text-xs text-fg-muted">
+                        Desde el <time dateTime={detail.blockedAt}>{fmtDateTime(detail.blockedAt)}</time>
+                      </span>
+                    )}
                   </span>
                 ) : (
                   <StatusBadge kind="member" status="ACTIVE" label="Cuenta activa" />
@@ -672,6 +685,34 @@ function PersonPanel({
               },
             ]}
           />
+
+          {detail && detail.memberships.length > 0 && (
+            <div className="grid gap-2">
+              <h3 className="text-xs font-medium tracking-label text-fg-subtle uppercase">Membresías</h3>
+              <ul
+                className="grid divide-y divide-border rounded-md border border-border"
+                aria-label="Membresías de la persona"
+              >
+                {detail.memberships.map((m) => (
+                  <li key={m.membershipId} className="grid gap-0.5 px-3 py-2">
+                    <span className="font-medium">
+                      {m.organizationType === "WINERY" && m.organizationId !== winery.id ? (
+                        <TextLink asChild variant="inline">
+                          <Link href={`/bodegas/${m.organizationId}`}>{m.organizationName}</Link>
+                        </TextLink>
+                      ) : (
+                        m.organizationName
+                      )}
+                    </span>
+                    <span className="text-xs text-fg-muted">
+                      {roleLabel(m.role)} · {m.status === "BLOCKED" ? blockedByLabel(m).toLowerCase() : "activo"} ·
+                      organización {getStatusBadge("winery", m.organizationStatus).label.toLowerCase()}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
           <div className="grid gap-2">
             <h3 className="text-xs font-medium tracking-label text-fg-subtle uppercase">Acciones</h3>
@@ -685,7 +726,7 @@ function PersonPanel({
               </Button>
             )}
             {canAccount &&
-              (status?.blocked ? (
+              (blocked ? (
                 <Button
                   variant="secondary"
                   iconStart={icon(UserCheck)}
@@ -697,7 +738,7 @@ function PersonPanel({
                 <Button
                   variant="destructive"
                   iconStart={icon(ShieldOff)}
-                  disabled={account.isPending}
+                  disabled={!detail}
                   onClick={() => onAction({ kind: "account-block", member })}
                 >
                   Bloquear la cuenta completa

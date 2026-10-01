@@ -78,6 +78,19 @@ test("una cuenta sin membresía de plataforma no entra y se le ofrece el ERP", a
   expect(errors).toEqual([]);
 });
 
+test("el enlace Mi perfil del menú de usuario navega sin recargar la página", async ({ page }) => {
+  const errors = trackErrors(page);
+  await login(page);
+  // Una marca en `window` sobrevive a la navegación del cliente y desaparece con una recarga.
+  await page.evaluate(() => ((window as unknown as { __sinRecarga?: boolean }).__sinRecarga = true));
+  await page.getByRole("button", { name: /Menú de usuario/ }).click();
+  await page.getByRole("menuitem", { name: "Mi perfil" }).click();
+  await expect(page).toHaveURL(/\/perfil$/);
+  await expect(page.getByRole("heading", { level: 1, name: "Mi perfil" })).toBeVisible();
+  expect(await page.evaluate(() => (window as unknown as { __sinRecarga?: boolean }).__sinRecarga)).toBe(true);
+  expect(errors).toEqual([]);
+});
+
 test("cerrar sesión revoca la sesión: la recarga ya no entra", async ({ page }) => {
   await login(page);
   await page.getByRole("button", { name: /Menú de usuario/ }).click();
@@ -85,6 +98,23 @@ test("cerrar sesión revoca la sesión: la recarga ya no entra", async ({ page }
   await expect(page).toHaveURL(/\/login$/);
   await page.goto("/");
   await expect(page).toHaveURL(/\/login$/);
+});
+
+test("una sesión revocada avisa en el login, también al recargar", async ({ page }) => {
+  await login(page);
+  // Revoca en los mocks las sesiones abiertas (como un bloqueo de la cuenta).
+  await page.evaluate(() => {
+    const key = "doc-mocks:sessions";
+    const state = JSON.parse(localStorage.getItem(key) ?? "{}") as { sessions?: Record<string, { revoked: boolean }> };
+    for (const session of Object.values(state.sessions ?? {})) session.revoked = true;
+    localStorage.setItem(key, JSON.stringify(state));
+  });
+  const notice = page.getByText("Tu sesión se cerró por seguridad. Vuelve a entrar.");
+  await page.reload();
+  await expect(page).toHaveURL(/\/login$/);
+  await expect(notice).toBeVisible();
+  await page.reload();
+  await expect(notice).toBeVisible();
 });
 
 test("recuperar la contraseña desde el enlace del buzón simulado", async ({ page }) => {

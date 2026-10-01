@@ -1,5 +1,4 @@
-import type { LoginResponse, MfaEnrollConfirmResponse, SessionResponse } from "@drinks-on-chain/mocks";
-import { isMfaChallenge } from "@drinks-on-chain/mocks";
+import { isMfaChallenge, type LoginResponse, type MfaEnrollConfirmResponse, type SessionResponse } from "./schemas";
 import { ApiError } from "@/lib/api/errors";
 
 // Flujo de acceso con segundo factor (contrato de la Ola 1 §1), como máquina de estados pura:

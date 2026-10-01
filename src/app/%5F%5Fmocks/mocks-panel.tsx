@@ -192,7 +192,7 @@ export function MocksPanel() {
           columns={[
             { id: "name", header: "Nombre", cell: (u) => u.fullName },
             { id: "email", header: "Correo", cell: (u) => u.email },
-            { id: "role", header: "Rol", cell: (u) => <Badge>{roleLabel(u.memberRole ?? u.userRole)}</Badge> },
+            { id: "role", header: "Rol", cell: (u) => <Badge>{roleLabel(u.role)}</Badge> },
             { id: "winery", header: "Bodega activa", cell: (u) => u.wineryName ?? "—" },
             enterColumn,
           ]}

@@ -38,7 +38,7 @@ Sub-etapas 4A–4F de `docs-front/03-roadmap-frontend.md` v3 §8, ordenadas por 
 - [x] Pruebas unitarias: `can()`, flujo TOTP, formularios con `details` por campo, cliente (`X-Client-App`, `Retry-After`) · 2026-09-27
 - [x] E2E con mocks (escritorio): TOTP real, inscripción, recuperación, invitar y aceptar desde el buzón, bloquear con motivo y verlo en el tablero, matriz, teclado y ⌘K, axe sin violaciones serias, sin errores de consola · 2026-09-27
 - [x] Verificación visual contra `docs-front/design-system/03-backoffice.html` · 2026-09-27
-- [ ] Contra el backend de desarrollo cuando publique la Etapa 1 (O1-BE-1)
+- [x] Contra el backend de desarrollo (Etapa 1 de O1-BE-1): login con TOTP, inscripción, recuperación por correo, tablero, usuarios internos (invitar y aceptar desde Mailpit, rol, bloqueo con motivo), matriz; `e2e/backend-real.spec.ts` (`E2E_REAL_API=1`) y job manual `e2e-backend-real` en CI · 2026-09-27
 
 ## 4B · Solicitudes, bodegas y equipo (O1-BO-2, Ola 1)
 
@@ -51,8 +51,10 @@ Sub-etapas 4A–4F de `docs-front/03-roadmap-frontend.md` v3 §8, ordenadas por 
 - [x] Tablero: los KPI y su desglose enlazan con las listas filtradas · 2026-09-27
 - [x] ⌘K: "Nueva bodega", "Ir a solicitud…" y búsqueda de solicitudes y bodegas en el servidor · 2026-09-27
 - [x] `@drinks-on-chain/ui` 0.3.0-rc.2 (foco de diálogos encadenados y `RoleMatrix` desplazable): fuera los parches locales · 2026-09-27
-- [ ] Invitaciones de una bodega con `GET /v1/platform/organizations/{id}/invitations` cuando el contrato la añada (hoy se reconstruyen con los eventos `INVITATION_*` de la bitácora) y estado de la cuenta completa con una lectura propia (hoy, último `USER_BLOCKED`/`USER_UNBLOCKED`)
-- [ ] Contra el backend de desarrollo cuando publique la Etapa 1 (O1-BE-1)
+- [x] Invitaciones de una bodega con `GET /v1/platform/organizations/{id}/invitations` y cuenta completa con `GET /v1/platform/accounts/{userId}` (estado y membresías en el panel de la persona): fuera las vistas derivadas de la bitácora · 2026-09-27
+- [x] `@drinks-on-chain/mocks` 0.4.0-rc.1 (alineado con el backend de la Ola 1): tipos de recurso de la bitácora en `snake_case` y códigos de acción del backend · 2026-09-27
+- [x] Contra el backend de desarrollo (Etapa 1 de O1-BE-1): solicitudes (tomar, nota, reunión, aprobar y activación del dueño, rechazar, ⌘K), alta directa con reenvío y activación, suspender/reactivar, equipo (invitar/anular, bloqueo en la bodega, cuenta completa), transferir la titularidad, configuración (estándar y vuelta atrás, excepción legal y vuelta al estándar), bitácora (filtros, CSV, verificación), en `e2e/backend-real.spec.ts` · 2026-09-27
+- [x] IP real del cliente detrás del proxy (O1-OPS-1): `rewrites` sustituidos por `src/proxy.ts`, que reescribe `/api/v1/*` a `${API_ORIGIN}/v1/*` con `X-DOC-Client-IP` firmada (HMAC con `PROXY_SHARED_SECRET`, variable de servidor) · 2026-09-27
 
 ## 4C · Tokenización (Ola 3)
 
@@ -71,3 +73,15 @@ Sub-etapas 4A–4F de `docs-front/03-roadmap-frontend.md` v3 §8, ordenadas por 
 - [x] Ola 1 · 4A: teclado completo, paginación (`limit` ≤ 100) y ordenación en la tabla de usuarios, Playwright del recorrido · 2026-09-27
 - [x] Ola 1 · 4B: filtros y página en la URL, paginación (`limit` ≤ 100) y ordenación en todas las listas; Playwright con mocks: solicitud tomar → reunión → aprobar → correo del buzón → aceptar → bodega activa con prefijo, rechazo, alta directa, suspender y verlo en la bitácora, bloquear miembro y cuenta completa, mínimo legal (rechazo y excepción), CSV, verificación de la cadena, soporte sin escritura; axe en todas las pantallas y diálogos nuevos; teclado (detalle de la bitácora, pestañas, ⌘K) · 2026-09-27
 - [ ] Recorrido H1 con el repo `drinks-on-chain-e2e`
+
+## Cierre de la Ola 1 (H1) · retirada de la compatibilidad transitoria
+
+Contrato: `plan/contratos/o1-backoffice-y-bodegas.md` §11 y `o0-sesiones-y-estandares.md` §5. Llega con la plantilla (`git merge template/dev`).
+
+- [x] Sin `refreshToken` en el cuerpo: ni se guarda ni se reenvía en `refresh` ni en `switch-organization` (aceptar una invitación ya no lo enviaba); el de la respuesta se ignora · 2026-09-27
+- [x] Login, segundo factor, sesión y `me` con los esquemas de `src/lib/auth/schemas.ts` (sin `tokens.refreshToken` ni `user.userRole/wineryId/memberRole`); `/__mocks` muestra el rol de la membresía activa · 2026-09-27
+- [x] `PATCH /v1/users/me` solo con `{ user, memberships, activeOrganizationId }`; `details` solo como `{ field, message }` · 2026-09-27
+- [x] Aviso "Tu sesión se cerró por seguridad" en el login también al recargar con una sesión revocada (unitaria y E2E) · 2026-09-27
+- [x] `@drinks-on-chain/mocks` 0.4.0-rc.2 (retirada de H1 en los mocks) con la plantilla: esquemas de sesión y `me` reexportados salvo `tokens.refreshToken` (obsoleto hasta 0.5), `/__mocks` con `DemoUser.role` y pruebas sin campos de 0.1 · 2026-09-27
+- [x] `@drinks-on-chain/ui` 0.3.1-rc.1 con la plantilla: "Mi perfil" del menú de usuario del `AdminShell` navega con `linkComponent` sin recargar (E2E) · 2026-09-27
+- [x] CI en verde con `mocks` 0.4.0-rc.2: la prueba del login afirma lo que hace el Backoffice (`login()` no abre la sesión; la aplica el flujo al terminar) y `src/lib/auth/mocks-contract.test.ts` recorre la sesión contra los handlers reales del paquete (reto, sesión, `me`, renovación, cambio de organización) · 2026-10-01

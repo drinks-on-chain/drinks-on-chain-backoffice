@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { MfaEnrollConfirmResponse, SessionResponse } from "@drinks-on-chain/mocks";
+import type { MfaEnrollConfirmResponse, SessionResponse } from "./schemas";
 import { ApiError } from "@/lib/api/errors";
 import {
   initialLoginFlow,
@@ -13,7 +13,7 @@ const session = {
   user: { id: "u1", email: "gestor@drinksonchain.test", fullName: "Ana Gutiérrez" },
   memberships: [],
   activeOrganizationId: "platform",
-  tokens: { accessToken: "a", tokenType: "Bearer", expiresIn: 900, refreshToken: "r" },
+  tokens: { accessToken: "a", tokenType: "Bearer", expiresIn: 900 },
 } as unknown as SessionResponse;
 
 const challenge = (enrolled: boolean) => ({ mfa: { required: true as const, enrolled, mfaToken: "mfa_1" } });

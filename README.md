@@ -50,24 +50,46 @@ Los correos (invitaciones, recuperación) llegan al **buzón simulado** de `/__m
 | `pnpm build`, `pnpm start`                 | Build y servidor de producción (3003)                                                                 |
 | `pnpm e2e`                                 | Playwright (escritorio) contra un build con mocks en el puerto 3103; en local usa el Chrome instalado |
 
+### Contra el backend real de desarrollo
+
+`e2e/backend-real.spec.ts` recorre el back office contra el backend de desarrollo (login con TOTP, invitar y aceptar un usuario interno con inscripción del TOTP, recuperar la contraseña por correo, rol, bloqueo y matriz, alta directa y activación, suspender/reactivar, equipo y cuenta completa, transferir la titularidad, configuración y excepción legal, bitácora con CSV y verificación, solicitudes y ⌘K). Queda fuera de `pnpm e2e` salvo con `E2E_REAL_API=1`:
+
+```bash
+# Secretos solo en el entorno (nunca como argumentos ni en archivos del repo)
+export E2E_PASSWORD="$(ssh drinksonchain-server "sed -n 's/^SEED_DEMO_PASSWORD=//p' ~/doc-dev/.env")"
+export E2E_TOTP_SECRET="$(ssh drinksonchain-server "sed -n 's/^SEED_DEMO_TOTP_SECRET=//p' ~/doc-dev/.env")"
+ssh -N -L 18025:127.0.0.1:8025 drinksonchain-server &   # Mailpit (solo escucha en el servidor)
+E2E_REAL_API=1 E2E_API_ORIGIN=https://136.243.223.39.sslip.io E2E_MAILPIT_URL=http://127.0.0.1:18025 pnpm e2e
+```
+
+- Construye sin mocks y sirve en el puerto **3113**; un solo worker, sin reintentos, sin trazas, capturas ni vídeos.
+- Todo lo que crea lleva el sufijo de la ejecución (correos `nombre+bo-<run>@example.test`, bodegas `Bodega Directa <run>`…). No inscribe el TOTP ni cambia contraseñas de la semilla; el parámetro que cambia se deja como estaba y, al terminar (aunque falle un paso), revoca las bodegas de la prueba y bloquea al usuario interno creado.
+- Sin `E2E_MAILPIT_URL` se saltan los pasos que leen correos. El formulario público de solicitudes admite 10 envíos por IP y hora (el resto, 202 sin crear nada): cada ejecución usa 2.
+- En CI: job manual `e2e-backend-real` (`workflow_dispatch`, entrada `api_origin`) con los secretos del repo `E2E_PASSWORD`, `E2E_TOTP_SECRET` y, opcional, `E2E_MAILPIT_URL`.
+
 ## Variables de entorno
 
-| Variable                                                                    | Uso                                                                                                                                                                          |
-| --------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `API_ORIGIN`                                                                | **Solo servidor.** Origen del backend: Next reescribe `/api/v1/*` a `${API_ORIGIN}/v1/*`. Obligatoria sin mocks y en el build. Desarrollo: `https://136.243.223.39.sslip.io` |
-| `NEXT_PUBLIC_MOCKS`                                                         | `1` arranca MSW y habilita `/__mocks` (demos). Con `1` no hace falta `API_ORIGIN`                                                                                            |
-| `NEXT_PUBLIC_URL_ERP`                                                       | ERP de las bodegas: "Abrir el ERP" para quien también es miembro de una bodega y las invitaciones de bodega                                                                  |
-| `NEXT_PUBLIC_URL_LANDING`, `NEXT_PUBLIC_URL_BODEGAS`, `NEXT_PUBLIC_URL_APP` | Enlaces a los otros sitios; nunca se escriben hosts en componentes                                                                                                           |
-| `NEXT_PUBLIC_TURNSTILE_SITE_KEY`                                            | Cloudflare Turnstile en "recuperar contraseña". Vacía: sin widget y con el token de prueba de Turnstile                                                                      |
-| `NEXT_PUBLIC_FLAG_TOKENIZATION`, `…_PICKUP_POINTS`, `…_SUPPORT`, `…_ORDERS` | Módulos de otras olas (4C, 4D, 4F) en el menú (`1` = visible)                                                                                                                |
+| Variable                                                                    | Uso                                                                                                                                                                                                                                                      |
+| --------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `API_ORIGIN`                                                                | **Solo servidor.** Origen del backend: `src/proxy.ts` reescribe `/api/v1/*` a `${API_ORIGIN}/v1/*`. Obligatoria sin mocks, también en el build (se valida al construir). Desarrollo: `https://136.243.223.39.sslip.io`                                   |
+| `PROXY_SHARED_SECRET`                                                       | **Solo servidor, nunca `NEXT_PUBLIC_`.** Firma la IP del cliente para el backend (O1-OPS-1): mismo valor que en el backend del entorno (si hay varios separados por comas, firma con el primero). Vacía = sin firma: el backend usa la IP de la conexión |
+| `NEXT_PUBLIC_MOCKS`                                                         | `1` arranca MSW y habilita `/__mocks` (demos). Con `1` no hace falta `API_ORIGIN`                                                                                                                                                                        |
+| `NEXT_PUBLIC_URL_ERP`                                                       | ERP de las bodegas: "Abrir el ERP" para quien también es miembro de una bodega y las invitaciones de bodega                                                                                                                                              |
+| `NEXT_PUBLIC_URL_LANDING`, `NEXT_PUBLIC_URL_BODEGAS`, `NEXT_PUBLIC_URL_APP` | Enlaces a los otros sitios; nunca se escriben hosts en componentes                                                                                                                                                                                       |
+| `NEXT_PUBLIC_TURNSTILE_SITE_KEY`                                            | Cloudflare Turnstile en "recuperar contraseña". Vacía: sin widget y con el token de prueba de Turnstile                                                                                                                                                  |
+| `NEXT_PUBLIC_FLAG_TOKENIZATION`, `…_PICKUP_POINTS`, `…_SUPPORT`, `…_ORDERS` | Módulos de otras olas (4C, 4D, 4F) en el menú (`1` = visible)                                                                                                                                                                                            |
 
 ## Despliegue
 
 Vercel (framework Next.js, `pnpm build`, Node 22): producción desde `main`, previews desde `dev`, `NEXT_PUBLIC_MOCKS=1` en producción hasta la integración con el backend.
 
+**IP real del cliente** (O1-OPS-1, de la plantilla): `src/proxy.ts` (`src/lib/api-proxy.ts`) reescribe `/api/v1/*` al backend sin tocar método, cuerpo (en streaming, sin límite de tamaño de función), cookies ni respuesta (`Set-Cookie`, `Retry-After`, `Content-Disposition`), y con `PROXY_SHARED_SECRET` añade `X-DOC-Client-IP`, `X-DOC-Proxy-Timestamp` y `X-DOC-Proxy-Signature` (HMAC-SHA256 de `MÉTODO|RUTA_CON_QUERY|IP|TIMESTAMP`, query canónica). La IP sale de `x-real-ip`/`x-forwarded-for`, que en Vercel pone la plataforma; fuera de Vercel hace falta un proxy delante que los reescriba. Las `X-DOC-*` del cliente se descartan.
+
+**Sesión tras el cierre de la Ola 1 (H1, de la plantilla)**: el refresco viaja solo en la cookie `doc_rt` (ni `refresh` ni `switch-organization` llevan `refreshToken` en el cuerpo; el que aún llegue en una respuesta se ignora); la sesión, el login con segundo factor y `me` se validan con `src/lib/auth/schemas.ts`, sin `user.userRole/wineryId/memberRole`; `PATCH /v1/users/me` devuelve `me` completo y los `details` solo se leen como `{ field, message }`. Si la sesión se revoca (bloqueo, reutilización del refresco), el login avisa "Tu sesión se cerró por seguridad", también tras recargar.
+
 ## Paquetes compartidos
 
-`@drinks-on-chain/ui` y `@drinks-on-chain/mocks` se instalan desde el tarball de su GitHub Release (hoy `ui` 0.3.0-rc.2 y `mocks` 0.3.0-rc.2):
+`@drinks-on-chain/ui` y `@drinks-on-chain/mocks` se instalan desde el tarball de su GitHub Release (hoy `ui` 0.3.1 y `mocks` 0.4.0, alineado con el backend de la Ola 1 tras la retirada de H1):
 
 ```bash
 pnpm add https://github.com/drinks-on-chain/drinks-on-chain-design-system/releases/download/vX.Y.Z/drinks-on-chain-ui-X.Y.Z.tgz

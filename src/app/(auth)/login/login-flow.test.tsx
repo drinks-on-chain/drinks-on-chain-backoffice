@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { getAccessToken, resetSessionForTests } from "@/lib/api/session";
+import { clearSession, getAccessToken, resetSessionForTests } from "@/lib/api/session";
 import { fail, ok, renderWithQuery, routerMock, stubFetch } from "@/test/utils";
 import { LoginFlow } from "./login-flow";
 
@@ -16,11 +16,10 @@ const session = {
     fullName: "Ana Gutiérrez",
     preferredLocale: "es",
     audience: "STAFF",
-    userRole: "PLATFORM_ADMIN",
   },
   memberships: [],
   activeOrganizationId: null,
-  tokens: { accessToken: "acceso-1", tokenType: "Bearer", expiresIn: 900, refreshToken: "r" },
+  tokens: { accessToken: "acceso-1", tokenType: "Bearer", expiresIn: 900 },
 };
 const challenge = (enrolled: boolean) => ({ mfa: { required: true, enrolled, mfaToken: "mfa_1" } });
 
@@ -51,6 +50,16 @@ describe("LoginFlow", () => {
       expect(String(url)).toBe(`/api/v1${path}`);
       return response;
     });
+
+  it("una sesión revocada avisa en el login (también tras recargar) hasta que se intenta entrar", async () => {
+    clearSession("revoked");
+    respond("/auth/login", fail(401, "AUTH_INVALID_CREDENTIALS"));
+    renderWithQuery(<LoginFlow />);
+    expect(screen.getByText("Tu sesión se cerró por seguridad. Vuelve a entrar.")).toBeInTheDocument();
+    await enterCredentials();
+    expect(await screen.findByText("Correo o contraseña incorrectos.")).toBeInTheDocument();
+    expect(screen.queryByText("Tu sesión se cerró por seguridad. Vuelve a entrar.")).not.toBeInTheDocument();
+  });
 
   it("marca el campo exacto con details[].field", async () => {
     respond(

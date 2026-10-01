@@ -23,11 +23,12 @@ S3 · Back office de Drinks on Chain (`admin.`): herramienta del personal intern
 ## Código
 
 - Las pantallas nunca llaman a `fetch` ni conocen URLs: hooks de `src/lib/auth` y `src/lib/platform` sobre `src/lib/api`, validados con los esquemas de `@drinks-on-chain/mocks`.
-- Sesión del contrato de la Ola 0: acceso solo en memoria, renovación con la cookie `doc_rt`; nada de tokens en `sessionStorage`/`localStorage`. API en `/api/v1/*` del propio origen (reescritura a `API_ORIGIN`).
+- Sesión del contrato de la Ola 0: acceso solo en memoria, renovación con la cookie `doc_rt`; nada de tokens en `sessionStorage`/`localStorage`. API en `/api/v1/*` del propio origen (`src/proxy.ts` la reescribe a `API_ORIGIN` con la IP del cliente firmada con `PROXY_SHARED_SECRET`).
 - Segundo factor: `src/lib/auth/login-flow.ts` (máquina de estados pura) y `src/components/auth/mfa-steps.tsx` (verificar, inscribir con QR y `SecretReveal`, códigos de recuperación una sola vez). Lo usan el login y la aceptación de invitaciones.
 - Listas con filtros y página en la URL (`useUrlParams` de `src/lib/use-url-params.ts`, `?pagina=`) y `limit` ≤ 100; errores de formulario con `fieldErrorsFrom()`; cifras y fechas con `src/lib/format.ts`; textos en `src/lib/i18n/es.ts` y códigos de la bitácora en `src/lib/platform/labels.ts`.
 - Acciones con motivo sobre terceros con `ReasonActionDialog` (`src/components/reason-action-dialog.tsx`); tarjetas con encabezado real con `SectionHeader`.
-- Lo que el contrato aún no expone al back office se deriva de la bitácora en `src/lib/platform/derive.ts` (invitaciones de una bodega, estado de la cuenta completa); se sustituye cuando llegue la ruta.
+- Invitaciones de una bodega con `GET /v1/platform/organizations/{id}/invitations` y cuenta completa con `GET /v1/platform/accounts/{userId}` (ya no se derivan de la bitácora). Tipos de recurso de la bitácora en `snake_case` y códigos de acción del backend (`src/lib/platform/labels.ts`).
 - Componentes de `@drinks-on-chain/ui`; si falta uno reutilizable, se añade allí. Los arreglos locales a componentes del paquete se marcan con "Pendiente de corregir en …".
 - Módulos de otras olas ocultos con `NEXT_PUBLIC_FLAG_*` (`src/lib/navigation.tsx`).
 - E2E contra los mocks: el TOTP se genera con `generateTotp(DEMO_TOTP_SECRET)` (nunca el atajo `000000`); los correos se leen en el buzón simulado de `/__mocks`.
+- E2E contra el backend real: `e2e/backend-real.spec.ts` solo con `E2E_REAL_API=1` (puerto 3113; ver README). Secretos solo por el entorno, datos con el sufijo de la ejecución y limpieza al final; nunca inscribir el TOTP ni cambiar la contraseña de la semilla.
