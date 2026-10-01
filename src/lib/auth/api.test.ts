@@ -1,7 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { getAccessToken, resetSessionForTests, setSession } from "@/lib/api/session";
 import { ok, stubFetch } from "@/test/utils";
-import { acceptInvitation, login, switchOrganization, updateMe } from "./api";
+import { acceptInvitation, applySession, login, switchOrganization, updateMe } from "./api";
+import { isMfaChallenge } from "./schemas";
 
 /** Respuesta de sesión tras H1: sin `refreshToken` ni `userRole/wineryId/memberRole`. */
 const session = {
@@ -35,12 +36,24 @@ describe("sesión y cuenta tras H1", () => {
     expect(getAccessToken()).toBe("a2");
   });
 
-  it("el login guarda el acceso de la sesión (sin refreshToken en el cuerpo)", async () => {
+  // A diferencia de la plantilla, aquí `login()` no abre la sesión: el flujo de acceso la aplica
+  // al terminar (tras el segundo factor y, en la inscripción, tras guardar los códigos).
+  it("el login devuelve la sesión sin guardarla; `applySession` guarda solo el acceso", async () => {
     fetchMock.mockResolvedValueOnce(ok(session));
     const res = await login({ email: "a@b.test", password: "x" });
     expect(res).toMatchObject({ activeOrganizationId: "platform" });
     expect(res).not.toHaveProperty("tokens.refreshToken");
+    expect(getAccessToken()).toBeNull();
+    if (isMfaChallenge(res)) throw new Error("se esperaba una sesión");
+    applySession(res);
     expect(getAccessToken()).toBe("a2");
+  });
+
+  it("el login del personal devuelve el reto de segundo factor y no guarda nada", async () => {
+    fetchMock.mockResolvedValueOnce(ok({ mfa: { required: true, enrolled: true, mfaToken: "reto" } }));
+    const res = await login({ email: "a@b.test", password: "x" });
+    expect(res).toEqual({ mfa: { required: true, enrolled: true, mfaToken: "reto" } });
+    expect(getAccessToken()).toBeNull();
   });
 
   it("aceptar con cuenta existente envía `{}` con la sesión (sin refresco en el cuerpo)", async () => {
