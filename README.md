@@ -2,14 +2,14 @@
 
 **S3 · Back office de Drinks on Chain** (`admin.`): la herramienta del personal interno para dar de alta y gestionar bodegas, usuarios internos, configuración y bitácora. Nace de [`drinks-on-chain-app-template`](https://github.com/drinks-on-chain/drinks-on-chain-app-template) (Next.js 16, `@drinks-on-chain/ui`, `@drinks-on-chain/mocks`). Planificación en [drinks-on-chain-docsfront](https://github.com/drinks-on-chain/drinks-on-chain-docsfront) (`03` §8, `05` §5) y en el contrato de la Ola 1 del plan maestro.
 
-## Qué hay (4A y 4B)
+## Qué hay (4A, 4B y la lista de espera)
 
 | Pantalla                                                                         | Ruta                                                      | Contrato          |
 | -------------------------------------------------------------------------------- | --------------------------------------------------------- | ----------------- |
 | Entrar con segundo factor (verificar, inscribir con QR, códigos de recuperación) | `/login`                                                  | Ola 1 §1          |
 | Recuperar y restablecer la contraseña                                            | `/recuperar-contrasena`, `/restablecer-contrasena?token=` | Ola 1 §1          |
 | Aceptar la invitación de un usuario interno (cuenta nueva o existente)           | `/invitacion/[token]`                                     | Ola 1 §2          |
-| Tablero: KPI, alertas y actividad reciente                                       | `/`                                                       | Ola 1 §8          |
+| Tablero: KPI (con la lista de espera), alertas y actividad reciente              | `/`                                                       | Ola 1 §8          |
 | Usuarios internos: invitar, rol, bloquear, TOTP, invitaciones                    | `/usuarios`                                               | Ola 1 §5          |
 | Matriz de permisos                                                               | `/usuarios/permisos`                                      | Ola 1 §5 (PLT-04) |
 | Mi perfil: nombre, idioma, contraseña, cerrar todas las sesiones                 | `/perfil`                                                 | Ola 1 §1          |
@@ -17,6 +17,7 @@
 | Directorio, alta directa y ficha de bodega (perfil, estado, historial, equipo)   | `/bodegas`, `/bodegas/nueva`, `/bodegas/[id]`             | Ola 1 §4, §5      |
 | Configuración: estándar, ajustes por bodega, excepción legal, historial          | `/configuracion`, `/configuracion/[clave]`                | Ola 1 §6          |
 | Bitácora: filtros, detalle con antes/después, CSV y verificación de la cadena    | `/bitacora`                                               | Ola 1 §7          |
+| Lista de espera: consumidores y bodegas, filtros, seguimiento y CSV              | `/lista-de-espera`                                        | O1b §2            |
 | Datos de prueba: escenario, entrar como, **buzón simulado**                      | `/__mocks`                                                | solo con mocks    |
 
 `AdminShell` con paleta de comandos (`⌘K`/`Ctrl+K` y `/`), guardia por audiencia y organización de plataforma, permisos por rol con `can()`, motivo obligatorio (`ReasonDialog`) en las acciones sobre terceros y `X-Client-App: BACKOFFICE` en todas las peticiones. Reglas completas en [`CLAUDE.md`](CLAUDE.md); avance en [`docs/ROADMAP.md`](docs/ROADMAP.md).
@@ -76,6 +77,7 @@ E2E_REAL_API=1 E2E_API_ORIGIN=https://136.243.223.39.sslip.io E2E_MAILPIT_URL=ht
 | `NEXT_PUBLIC_MOCKS`                                                         | `1` arranca MSW y habilita `/__mocks` (demos). Con `1` no hace falta `API_ORIGIN`                                                                                                                                                                        |
 | `NEXT_PUBLIC_URL_ERP`                                                       | ERP de las bodegas: "Abrir el ERP" para quien también es miembro de una bodega y las invitaciones de bodega                                                                                                                                              |
 | `NEXT_PUBLIC_URL_LANDING`, `NEXT_PUBLIC_URL_BODEGAS`, `NEXT_PUBLIC_URL_APP` | Enlaces a los otros sitios; nunca se escriben hosts en componentes                                                                                                                                                                                       |
+| `NEXT_PUBLIC_URL_WHATSAPP`                                                  | Servicio de los enlaces "Escribir por WhatsApp" de la lista de espera. Vacía: `https://wa.me`                                                                                                                                                            |
 | `NEXT_PUBLIC_TURNSTILE_SITE_KEY`                                            | Cloudflare Turnstile en "recuperar contraseña". Vacía: sin widget y con el token de prueba de Turnstile                                                                                                                                                  |
 | `NEXT_PUBLIC_FLAG_TOKENIZATION`, `…_PICKUP_POINTS`, `…_SUPPORT`, `…_ORDERS` | Módulos de otras olas (4C, 4D, 4F) en el menú (`1` = visible)                                                                                                                                                                                            |
 
@@ -89,7 +91,7 @@ Vercel (framework Next.js, `pnpm build`, Node 22): producción desde `main`, pre
 
 ## Paquetes compartidos
 
-`@drinks-on-chain/ui` y `@drinks-on-chain/mocks` se instalan desde el tarball de su GitHub Release (hoy `ui` 0.3.1 y `mocks` 0.4.0, alineado con el backend de la Ola 1 tras la retirada de H1):
+`@drinks-on-chain/ui` y `@drinks-on-chain/mocks` se instalan desde el tarball de su GitHub Release (hoy `ui` 0.3.1 y `mocks` 0.4.1, alineado con el backend `v0.1.1`: Ola 1 tras la retirada de H1 más la lista de espera):
 
 ```bash
 pnpm add https://github.com/drinks-on-chain/drinks-on-chain-design-system/releases/download/vX.Y.Z/drinks-on-chain-ui-X.Y.Z.tgz

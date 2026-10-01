@@ -130,6 +130,8 @@ test.describe("axe sin violaciones serias", () => {
     "/configuracion",
     "/configuracion/trazabilidad.singani.altitudMinimaMsnm",
     "/bitacora",
+    "/lista-de-espera",
+    "/lista-de-espera?tipo=bodegas&estado=CONTACTED",
     "/__mocks",
   ]) {
     test(`con sesión ${path}`, async ({ page }) => {

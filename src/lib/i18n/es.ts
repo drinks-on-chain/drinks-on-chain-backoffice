@@ -119,6 +119,7 @@ export const es = {
     dashboard: "Tablero",
     applications: "Solicitudes",
     wineries: "Bodegas",
+    waitlist: "Lista de espera",
     users: "Usuarios internos",
     settings: "Configuración",
     audit: "Bitácora",

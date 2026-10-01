@@ -16,6 +16,7 @@ export const keys = {
   settings: ["platform", "settings"] as const,
   setting: (key: string) => ["platform", "settings", key] as const,
   audit: ["platform", "audit"] as const,
+  waitlist: ["platform", "waitlist"] as const,
   users: ["platform", "users"] as const,
 };
 

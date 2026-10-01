@@ -4,6 +4,7 @@ import {
   Inbox,
   LayoutDashboard,
   LifeBuoy,
+  ListChecks,
   MapPin,
   ScrollText,
   Settings,
@@ -14,9 +15,12 @@ import {
 import type { NavGroup, NavItem } from "@drinks-on-chain/ui";
 import { env } from "@/lib/env";
 import { es } from "@/lib/i18n/es";
+import type { PlatformAction } from "@/lib/platform/permissions";
+import { WAITLIST_PATH } from "@/lib/platform/waitlist-utils";
 
 // Menú del back office (docs-front/03 §8). 4A y 4B en la Ola 1; los módulos de otras olas (4C,
-// 4D, 4F) solo aparecen con su bandera NEXT_PUBLIC_FLAG_*.
+// 4D, 4F) solo aparecen con su bandera NEXT_PUBLIC_FLAG_*. La lista de espera (O1b) aparece con
+// su capacidad (`allowed`, normalmente `can(me, …)`).
 
 type Item = NavItem & { keywords?: string[] };
 
@@ -24,10 +28,20 @@ const icon = (Icon: typeof Users) => <Icon aria-hidden="true" className="size-5"
 
 export const dashboardItem: Item = { label: es.nav.dashboard, href: "/", exact: true, icon: icon(LayoutDashboard) };
 
-export function navigation(flags = env.flags): NavGroup[] {
+export function navigation(flags = env.flags, allowed: (action: PlatformAction) => boolean = () => true): NavGroup[] {
   const operations: Item[] = [
     { label: es.nav.applications, href: "/solicitudes", icon: icon(Inbox), keywords: ["alta", "bandeja"] },
     { label: es.nav.wineries, href: "/bodegas", icon: icon(Building2), keywords: ["socias", "directorio"] },
+    ...(allowed("waitlist.read")
+      ? [
+          {
+            label: es.nav.waitlist,
+            href: WAITLIST_PATH,
+            icon: icon(ListChecks),
+            keywords: ["inscripciones", "consumidores", "interesados", "espera"],
+          },
+        ]
+      : []),
     ...(flags.tokenization ? [{ label: es.nav.tokenization, href: "/tokenizacion", icon: icon(Sparkles) }] : []),
     ...(flags.pickupPoints ? [{ label: es.nav.pickupPoints, href: "/puntos", icon: icon(MapPin) }] : []),
     ...(flags.support ? [{ label: es.nav.support, href: "/soporte", icon: icon(LifeBuoy) }] : []),
