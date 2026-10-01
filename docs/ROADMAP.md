@@ -56,6 +56,20 @@ Sub-etapas 4A–4F de `docs-front/03-roadmap-frontend.md` v3 §8, ordenadas por 
 - [x] Contra el backend de desarrollo (Etapa 1 de O1-BE-1): solicitudes (tomar, nota, reunión, aprobar y activación del dueño, rechazar, ⌘K), alta directa con reenvío y activación, suspender/reactivar, equipo (invitar/anular, bloqueo en la bodega, cuenta completa), transferir la titularidad, configuración (estándar y vuelta atrás, excepción legal y vuelta al estándar), bitácora (filtros, CSV, verificación), en `e2e/backend-real.spec.ts` · 2026-09-27
 - [x] IP real del cliente detrás del proxy (O1-OPS-1): `rewrites` sustituidos por `src/proxy.ts`, que reescribe `/api/v1/*` a `${API_ORIGIN}/v1/*` con `X-DOC-Client-IP` firmada (HMAC con `PROXY_SHARED_SECRET`, variable de servidor) · 2026-09-27
 
+## Lista de espera (O1b, añadido a la Ola 1)
+
+Contrato: `plan/contratos/o1b-lista-de-espera.md` §2 con las precisiones del backend `v0.1.1` (`drinks-on-chain-mocks/docs/CONTRATO.md` §9). No es la Ola 2.
+
+- [x] `@drinks-on-chain/mocks` 0.4.1 (esquemas, fixtures y handlers de la lista de espera; bloque `waitlist` obligatorio en el tablero) · 2026-10-01
+- [x] Capacidad `waitlist`: `waitlist.read` (los cuatro roles de plataforma) y `waitlist.manage` (sin soporte) en `can()`; entrada "Lista de espera" en el menú y en ⌘K según la capacidad · 2026-10-01
+- [x] Pantalla `/lista-de-espera`: pestañas Consumidores / Bodegas con su total (roles ARIA, flechas), pestaña y filtros en la URL (búsqueda con espera, estado, origen con recuento de `/sources?type=`, fechas), tabla con columnas por tipo y paginación `limit`/`offset`; estados vacío, de carga y de error · 2026-10-01
+- [x] Detalle en panel lateral (`SlideOver`): todos los datos, mensaje, idioma, consentimiento, quién y cuándo la contactó, enlaces `mailto:` y de WhatsApp (`NEXT_PUBLIC_URL_WHATSAPP`); marcar como contactado, descartar, volver a nuevo y notas (≤ 1000) en un solo `PATCH`; soporte, en solo lectura · 2026-10-01
+- [x] Exportar CSV con los filtros activos (cliente de API autenticado → blob → descarga con el nombre del `Content-Disposition`), aviso con las filas de `X-Export-Rows` y manejo del 422 `WAITLIST_EXPORT_TOO_LARGE` · 2026-10-01
+- [x] Tablero: tarjeta "Lista de espera" (total, consumidores, bodegas, últimas 24 h) con enlaces a la pantalla · 2026-10-01
+- [x] Bitácora: textos de `WAITLIST_JOINED`, `WAITLIST_STATUS_CHANGED`, `WAITLIST_EXPORTED` y del recurso `waitlist_entry` · 2026-10-01
+- [x] Pruebas: unitarias (filtros ↔ URL, cuerpo del PATCH, número de WhatsApp, recuento del CSV, descarga), cliente contra los handlers reales de los mocks (lista, orígenes, PATCH, CSV, 403 de soporte) y `e2e/waitlist.spec.ts` (tablero → lista, pestañas, origen, contactar con nota, volver a nuevo, CSV, soporte sin acciones, axe y teclado) · 2026-10-01
+- [ ] Contra el backend real de desarrollo (`e2e/backend-real.spec.ts`): pendiente de añadir el recorrido de la lista de espera
+
 ## 4C · Tokenización (Ola 3)
 
 - [ ] Bandeja de solicitudes de tokenización, datos comerciales, colecciones con estado de emisión y explorador
