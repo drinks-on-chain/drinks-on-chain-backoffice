@@ -8,6 +8,7 @@ const schema = z.object({
   urlBodegas: z.string().url().or(z.literal("")),
   urlApp: z.string().url().or(z.literal("")),
   urlErp: z.string().url().or(z.literal("")),
+  urlWhatsapp: z.string().url(),
   turnstileSiteKey: z.string(),
   flags: z.object({
     tokenization: z.boolean(),
@@ -23,6 +24,8 @@ export const env = schema.parse({
   urlBodegas: process.env.NEXT_PUBLIC_URL_BODEGAS ?? "",
   urlApp: process.env.NEXT_PUBLIC_URL_APP ?? "",
   urlErp: process.env.NEXT_PUBLIC_URL_ERP ?? "",
+  // Enlaces «Escribir por WhatsApp» de la lista de espera (por defecto el servicio de enlaces).
+  urlWhatsapp: process.env.NEXT_PUBLIC_URL_WHATSAPP || "https://wa.me",
   turnstileSiteKey: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? "",
   // Módulos de otras olas (4C, 4D, 4F): ocultos en el menú hasta que existan (plan/03 §1).
   flags: {
