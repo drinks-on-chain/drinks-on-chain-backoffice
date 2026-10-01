@@ -297,10 +297,16 @@ export async function api<T = unknown>(path: string, opts: RequestOptions<T> = {
 export async function apiFile(
   path: string,
   opts: Omit<RequestOptions<unknown>, "schema" | "body" | "method"> = {},
-): Promise<{ blob: Blob; filename: string | null; contentType: string }> {
+): Promise<{ blob: Blob; filename: string | null; contentType: string; headers: Headers }> {
   const res = await authorizedFetch(path, { ...opts, method: "GET" });
   const contentType = res.headers.get("Content-Type") ?? "application/octet-stream";
   const disposition = res.headers.get("Content-Disposition") ?? "";
   const match = /filename\*?=(?:UTF-8'')?"?([^";]+)"?/i.exec(disposition);
-  return { blob: await res.blob(), filename: match ? decodeURIComponent(match[1]!) : null, contentType };
+  return {
+    blob: await res.blob(),
+    filename: match ? decodeURIComponent(match[1]!) : null,
+    contentType,
+    // Cabeceras propias de cada exportación (p. ej. `X-Export-Rows`).
+    headers: res.headers,
+  };
 }

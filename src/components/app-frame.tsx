@@ -161,7 +161,7 @@ function Shell({ me, children }: { me: MeResponse; children: ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const logout = useLogout();
-  const groups = useMemo(() => navigation(), []);
+  const groups = useMemo(() => navigation(undefined, (action) => can(me, action)), [me]);
   const active = activeMembership(me);
   const erp = wineryMemberships(me).length > 0 ? links.erp : null;
   const search = usePaletteSearch(me);

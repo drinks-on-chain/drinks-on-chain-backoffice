@@ -31,7 +31,10 @@ export type PlatformAction =
   | "settings.read"
   | "settings.write"
   | "audit.read"
-  | "audit.verify";
+  | "audit.verify"
+  // Lista de espera (contrato O1b; capacidad `waitlist`: FULL edita y exporta, READ solo consulta).
+  | "waitlist.read"
+  | "waitlist.manage";
 
 const ADMINS: readonly PlatformRole[] = ["SUPERADMIN", "ADMIN"];
 const OPS: readonly PlatformRole[] = [...ADMINS, "OPERATIONS"];
@@ -60,6 +63,8 @@ const RULES: Record<PlatformAction, readonly PlatformRole[]> = {
   "settings.write": ADMINS,
   "audit.read": STAFF,
   "audit.verify": ADMINS,
+  "waitlist.read": STAFF,
+  "waitlist.manage": OPS,
 };
 
 const PLATFORM_ROLES: readonly string[] = STAFF;

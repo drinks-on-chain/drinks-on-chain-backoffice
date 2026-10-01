@@ -10,6 +10,7 @@ import { fmtDateTime, fmtNumber, fmtRelative } from "@/lib/format";
 import { auditActionLabel, auditActorLabel } from "@/lib/platform/labels";
 import { useDashboard } from "@/lib/platform/hooks";
 import { can } from "@/lib/platform/permissions";
+import { waitlistHref } from "@/lib/platform/waitlist-utils";
 
 // 4A · Tablero (`GET /v1/platform/dashboard`, contrato de la Ola 1 §8, PLT-06).
 export function DashboardView() {
@@ -17,13 +18,16 @@ export function DashboardView() {
   const dashboard = useDashboard();
   const d = dashboard.data;
   const loading = dashboard.isPending;
+  // Lista de espera (contrato O1b): una tarjeta más para quien tiene la capacidad `waitlist`.
+  const showWaitlist = can(me.data, "waitlist.read");
+  const kpiColumns = showWaitlist ? "lg:grid-cols-3 2xl:grid-cols-5" : "xl:grid-cols-4";
 
   return (
     <div className="grid gap-6">
       <PageHeader
         eyebrow="Operaciones"
         title="Tablero"
-        description="Solicitudes, bodegas, invitaciones y equipo de un vistazo, con las alertas y la última actividad."
+        description="Solicitudes, bodegas, invitaciones, equipo y lista de espera de un vistazo, con las alertas y la última actividad."
       />
 
       {dashboard.isError ? (
@@ -38,7 +42,7 @@ export function DashboardView() {
         </Card>
       ) : (
         <>
-          <section aria-label="Indicadores" className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <section aria-label="Indicadores" className={`grid gap-4 sm:grid-cols-2 ${kpiColumns}`}>
             <KpiCard
               label="Solicitudes abiertas"
               loading={loading}
@@ -113,6 +117,27 @@ export function DashboardView() {
               linkLabel="Ver bloqueos en la bitácora"
               linkComponent={Link}
             />
+            {showWaitlist && (
+              <KpiCard
+                label="Lista de espera"
+                loading={loading}
+                loadingLabel="Cargando la lista de espera"
+                value={d ? fmtNumber(d.waitlist.consumers + d.waitlist.wineries) : "—"}
+                delta={d ? last24hLabel(d.waitlist.last24h) : undefined}
+                trend={d && d.waitlist.last24h > 0 ? "up" : "neutral"}
+                breakdown={
+                  d
+                    ? [
+                        breakdownLink("consumers", "Consumidores", d.waitlist.consumers, waitlistHref()),
+                        breakdownLink("wineries", "Bodegas", d.waitlist.wineries, waitlistHref({ type: "WINERY" })),
+                      ]
+                    : undefined
+                }
+                href={waitlistHref()}
+                linkLabel="Ver la lista de espera"
+                linkComponent={Link}
+              />
+            )}
           </section>
 
           <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
@@ -164,6 +189,8 @@ function breakdownLink(key: string, label: string, value: number, href: string) 
 
 const openApplications = (d: Dashboard) =>
   d.applications.received + d.applications.inReview + d.applications.meetingScheduled;
+
+const last24hLabel = (n: number) => (n === 0 ? "Ninguna en las últimas 24 h" : `${fmtNumber(n)} en las últimas 24 h`);
 
 const expiringLabel = (n: number) =>
   n === 0 ? "Ninguna caduca en 24 h" : n === 1 ? "1 caduca en 24 h" : `${fmtNumber(n)} caducan en 24 h`;

@@ -57,6 +57,10 @@ const AUDIT_ACTIONS: Record<string, string> = {
   SETTING_CHANGED: "Ajuste cambiado",
   SETTING_OVERRIDE_SET: "Ajuste por bodega cambiado",
   SETTING_OVERRIDE_RESET: "Ajuste por bodega restablecido",
+  // Lista de espera (contrato O1b).
+  WAITLIST_JOINED: "Inscripción en la lista de espera",
+  WAITLIST_STATUS_CHANGED: "Inscripción de la lista de espera actualizada",
+  WAITLIST_EXPORTED: "Lista de espera exportada",
   // Aprobación y rechazo del flujo anterior a la Ola 1 (`/v1/wineries/:id/approve|reject`).
   WINERY_APPROVED: "Bodega aprobada",
   WINERY_REJECTED: "Bodega rechazada",
@@ -121,6 +125,7 @@ export const RESOURCE_TYPE_LABELS: Record<string, string> = {
   invitation: "Invitación",
   user: "Persona",
   setting: "Parámetro",
+  waitlist_entry: "Inscripción en la lista de espera",
   terroir: "Parcela",
   harvest_batch: "Vendimia",
   fermentation_tank: "Cuba",
@@ -150,3 +155,29 @@ export const PREVIOUS_OWNER_LABELS = {
   BLOCKED: "Queda bloqueado en la bodega",
   ENOLOGIST: "Sigue en el equipo como enólogo",
 } as const;
+
+// Lista de espera (contrato O1b): estado de una inscripción, qué interesa o qué produce, idioma.
+export const WAITLIST_STATUS_LABELS: Record<string, string> = {
+  NEW: "Nueva",
+  CONTACTED: "Contactada",
+  DISCARDED: "Descartada",
+};
+export const waitlistStatusLabel = (s: string) => WAITLIST_STATUS_LABELS[s] ?? s;
+
+export const WAITLIST_STATUS_TONES: Record<string, "info" | "success" | "neutral"> = {
+  NEW: "info",
+  CONTACTED: "success",
+  DISCARDED: "neutral",
+};
+
+/** `interest` (consumidor) y `produces` (bodega). */
+export const WAITLIST_DRINK_LABELS: Record<string, string> = {
+  WINE: "Vino",
+  SINGANI: "Singani",
+  BOTH: "Vino y singani",
+  OTHER: "Otra bebida",
+};
+export const waitlistDrinkLabel = (v: string | null | undefined) => (v ? (WAITLIST_DRINK_LABELS[v] ?? v) : "—");
+
+export const LOCALE_LABELS: Record<string, string> = { es: "Español", en: "Inglés" };
+export const localeLabel = (l: string) => LOCALE_LABELS[l] ?? l;

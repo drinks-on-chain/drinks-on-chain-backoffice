@@ -52,6 +52,8 @@ describe("can() del back office", () => {
       ["settings.write", ["SUPERADMIN", "ADMIN"]],
       ["audit.read", ["SUPERADMIN", "ADMIN", "OPERATIONS", "SUPPORT"]],
       ["audit.verify", ["SUPERADMIN", "ADMIN"]],
+      ["waitlist.read", ["SUPERADMIN", "ADMIN", "OPERATIONS", "SUPPORT"]],
+      ["waitlist.manage", ["SUPERADMIN", "ADMIN", "OPERATIONS"]],
     ];
     for (const [action, allowed] of table) {
       for (const role of ["SUPERADMIN", "ADMIN", "OPERATIONS", "SUPPORT"] as const) {
