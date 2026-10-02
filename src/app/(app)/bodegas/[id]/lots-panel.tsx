@@ -1,7 +1,7 @@
 "use client";
 
 import { ExternalLink } from "lucide-react";
-import { LOT_STAGE_CODES, type LotSummary, type WineryDetail } from "@drinks-on-chain/mocks";
+import { LOT_STAGE_CODES, type LotLockInfo, type LotSummary, type WineryDetail } from "@drinks-on-chain/mocks";
 import {
   Badge,
   Button,
@@ -30,8 +30,12 @@ import { PAGE_PARAM, pageFrom, useUrlParams } from "@/lib/use-url-params";
 const PAGE_SIZE = 20;
 const ALL = "ALL";
 
-/** Solo desde 2xl: en pantallas más estrechas la tabla cabe sin desplazarse. */
-const WIDE = { className: "max-2xl:hidden", headerClassName: "max-2xl:hidden" };
+/**
+ * Columnas que solo caben en pantallas anchas (así la tabla no se desplaza y las incidencias
+ * quedan siempre a la vista): el candado desde 1440 px y el laboratorio desde 1600 px.
+ */
+const FROM_1440 = { className: "max-2xl:hidden", headerClassName: "max-2xl:hidden" };
+const FROM_1600 = { className: "max-[1599px]:hidden", headerClassName: "max-[1599px]:hidden" };
 
 const dash = <span className="text-fg-subtle">—</span>;
 
@@ -47,12 +51,18 @@ const COLUMNS: DataTableColumn<LotSummary>[] = [
     header: "Nombre",
     accessor: "name",
     cell: (l) => (
-      <span className="block max-w-56 truncate font-medium" title={l.name}>
+      <span className="block max-w-48 truncate font-medium" title={l.name}>
         {l.name}
       </span>
     ),
   },
-  { id: "type", header: "Tipo", accessor: (l) => lotProductLabel(l.productType), hideBelow: "lg" },
+  {
+    id: "type",
+    header: "Tipo",
+    accessor: (l) => lotProductLabel(l.productType),
+    hideBelow: "xl",
+    cell: (l) => <span className="whitespace-nowrap">{lotProductLabel(l.productType)}</span>,
+  },
   {
     id: "stage",
     header: "Etapa",
@@ -63,15 +73,15 @@ const COLUMNS: DataTableColumn<LotSummary>[] = [
     id: "lock",
     header: "Candado siguiente",
     accessor: (l) => l.nextLock?.unlockDate ?? "",
-    hideBelow: "xl",
-    cell: (l) => lockLabel(l.nextLock) ?? dash,
+    cell: (l) => <NextLock lock={l.nextLock} />,
+    ...FROM_1440,
   },
   {
     id: "bottles",
     header: "Botellas",
     accessor: (l) => l.bottles ?? -1,
     numeric: true,
-    hideBelow: "md",
+    hideBelow: "xl",
     cell: (l) => (l.bottles === null ? dash : fmtNumber(l.bottles)),
   },
   {
@@ -79,7 +89,7 @@ const COLUMNS: DataTableColumn<LotSummary>[] = [
     header: "Laboratorio",
     accessor: "labStatus",
     cell: (l) => <Badge tone={LAB_STATUS_TONES[l.labStatus] ?? "neutral"}>{labStatusLabel(l.labStatus)}</Badge>,
-    ...WIDE,
+    ...FROM_1600,
   },
   {
     id: "lotCode",
@@ -90,7 +100,11 @@ const COLUMNS: DataTableColumn<LotSummary>[] = [
   },
   {
     id: "issues",
-    header: "Incidencias abiertas",
+    header: (
+      <>
+        Incidencias<span className="sr-only"> abiertas</span>
+      </>
+    ),
     accessor: "complianceIssuesOpen",
     numeric: true,
     cell: (l) =>
@@ -101,6 +115,19 @@ const COLUMNS: DataTableColumn<LotSummary>[] = [
       ),
   },
 ];
+
+/** Candado siguiente en dos líneas: de qué es y hasta cuándo, y los días que faltan. */
+function NextLock({ lock }: { lock: LotLockInfo | null }) {
+  const label = lockLabel(lock);
+  if (!label) return dash;
+  const [what, left] = label.split(" · ");
+  return (
+    <span className="grid whitespace-nowrap">
+      <span>{what}</span>
+      <span className="text-xs text-fg-muted">{left}</span>
+    </span>
+  );
+}
 
 /** Código de lote de la etiqueta y, con el Marketplace configurado, su pasaporte público. */
 function LotCode({ lot }: { lot: LotSummary }) {
@@ -164,7 +191,7 @@ export function LotsPanel({ winery }: { winery: WineryDetail }) {
       >
         <SearchField
           label="Buscar"
-          className="w-72"
+          className="w-80"
           placeholder="Nombre, referencia o código de lote"
           value={url.get(P.q) ?? ""}
           onChange={(v) => url.set({ [P.q]: v })}
