@@ -187,3 +187,19 @@ export const APPLIES_AT_LABELS: Record<SettingDefinition["appliesAt"], string> =
   COLLECTION: "Al aprobar la colección",
   IMMEDIATE: "De inmediato",
 };
+
+/**
+ * Reglas de lote (CFG-06, contrato de la Ola 2 §2.3): el lote copia estos parámetros al crearse
+ * (su instantánea de reglas), así que un cambio no alcanza a los lotes que ya existen.
+ */
+export const appliesToNewLotsOnly = (setting: Pick<SettingDefinition, "appliesAt">) => setting.appliesAt === "LOT";
+
+export const LOT_RULES_NOTICE = {
+  title: "Solo afecta a los lotes nuevos",
+  /** Sobre el grupo de parámetros. */
+  group:
+    "Un cambio en estas reglas solo afecta a los lotes que se creen después: los lotes existentes conservan la instantánea de reglas con la que nacieron.",
+  /** Sobre un parámetro (estándar general y ajustes por bodega). */
+  setting:
+    "Un cambio en esta regla, en el estándar general o en un ajuste por bodega, solo afecta a los lotes que se creen después: los lotes existentes conservan la instantánea de reglas con la que nacieron.",
+} as const;

@@ -38,13 +38,18 @@ export default defineConfig({
     url: `http://localhost:${PORT}`,
     reuseExistingServer: !process.env.CI,
     timeout: 240_000,
-    // El ERP se ofrece a quien también es miembro de una bodega.
+    // El ERP se ofrece a quien también es miembro de una bodega; el Marketplace (`URL_APP`) da el
+    // enlace al pasaporte público de un lote.
     env: REAL
       ? {
           NEXT_PUBLIC_MOCKS: "0",
           API_ORIGIN: process.env.E2E_API_ORIGIN ?? "",
           NEXT_PUBLIC_URL_ERP: "http://localhost:3002",
         }
-      : { NEXT_PUBLIC_MOCKS: "1", NEXT_PUBLIC_URL_ERP: "http://localhost:3002" },
+      : {
+          NEXT_PUBLIC_MOCKS: "1",
+          NEXT_PUBLIC_URL_ERP: "http://localhost:3002",
+          NEXT_PUBLIC_URL_APP: "http://localhost:3005",
+        },
   },
 });

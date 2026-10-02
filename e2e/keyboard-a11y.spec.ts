@@ -126,6 +126,7 @@ test.describe("axe sin violaciones serias", () => {
     "/bodegas/nueva",
     "/bodegas/04de1441-989d-5c3e-b06f-033f3961d19d",
     "/bodegas/04de1441-989d-5c3e-b06f-033f3961d19d?pestana=equipo",
+    "/bodegas/04de1441-989d-5c3e-b06f-033f3961d19d?pestana=lotes",
     "/bodegas/04de1441-989d-5c3e-b06f-033f3961d19d?pestana=historial",
     "/configuracion",
     "/configuracion/trazabilidad.singani.altitudMinimaMsnm",

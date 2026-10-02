@@ -13,6 +13,11 @@ export const links = {
   erp: join(env.urlErp),
   /** Aceptar una invitación de bodega en el ERP (los tokens valen en cualquier app, 11 bis). */
   erpInvitation: (token: string) => join(env.urlErp, `/invitacion/${encodeURIComponent(token)}`),
+  /**
+   * Pasaporte público de un lote en el Marketplace (`{NEXT_PUBLIC_URL_APP}/b/{código de lote}`);
+   * `null` si el Marketplace no está configurado.
+   */
+  passport: (lotCode: string) => join(env.urlApp, `/b/${encodeURIComponent(lotCode)}`),
   /** Chat de WhatsApp con un teléfono (`NEXT_PUBLIC_URL_WHATSAPP`); `null` si no es un número completo. */
   whatsapp: (phone: string | null | undefined) => {
     const number = whatsappNumber(phone);
