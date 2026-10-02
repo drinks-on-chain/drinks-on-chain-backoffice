@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { SettingDefinition } from "@drinks-on-chain/mocks";
-import { Badge, Card, DataTable, ErrorState, SkeletonText, TextLink } from "@drinks-on-chain/ui";
+import { Alert, Badge, Card, DataTable, ErrorState, SkeletonText, TextLink } from "@drinks-on-chain/ui";
 import { PageHeader } from "@/components/page-header";
 import { SectionHeader } from "@/components/section-header";
 import { errorMessage } from "@/lib/api/errors";
@@ -13,6 +13,8 @@ import { can } from "@/lib/platform/permissions";
 import {
   APPLIES_AT_LABELS,
   LEVEL_LABELS,
+  LOT_RULES_NOTICE,
+  appliesToNewLotsOnly,
   formatSettingValue,
   groupSettings,
   legalMinimumLabel,
@@ -62,6 +64,11 @@ export function SettingsView() {
               title={group.label}
               description={`${group.items.length} ${group.items.length === 1 ? "parámetro" : "parámetros"} · ${group.prefix}.*`}
             />
+            {group.items.some(appliesToNewLotsOnly) && (
+              <Alert tone="info" role="note" title={LOT_RULES_NOTICE.title}>
+                {LOT_RULES_NOTICE.group}
+              </Alert>
+            )}
             <DataTable<SettingDefinition>
               caption={`Parámetros de ${group.label}`}
               captionHidden
