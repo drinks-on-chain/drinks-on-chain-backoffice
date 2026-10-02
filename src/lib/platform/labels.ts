@@ -61,6 +61,22 @@ const AUDIT_ACTIONS: Record<string, string> = {
   WAITLIST_JOINED: "Inscripción en la lista de espera",
   WAITLIST_STATUS_CHANGED: "Inscripción de la lista de espera actualizada",
   WAITLIST_EXPORTED: "Lista de espera exportada",
+  // Trazabilidad de la Ola 2 (escrituras del ERP sobre el lote).
+  LOT_CREATED: "Lote creado",
+  LOT_UPDATED: "Lote editado",
+  LOT_DISCARDED: "Lote descartado",
+  PHYTO_DECIDED: "Dictamen fitosanitario",
+  MATURITY_ANALYZED: "Análisis de madurez registrado",
+  TANK_TRANSITION: "Cambio de estado de un tanque",
+  DISTILLATION_CLOSED: "Destilación cerrada",
+  BOTTLED: "Lote embotellado",
+  LAB_REGISTERED: "Análisis de laboratorio registrado",
+  BOTTLE_CODE_VOIDED: "Código de botella anulado",
+  BOTTLE_CODES_EXPORTED: "Códigos de botella exportados",
+  CORRECTION_REGISTERED: "Corrección registrada",
+  ATTACHMENT_ADDED: "Archivo adjuntado al lote",
+  ATTACHMENT_VISIBILITY_CHANGED: "Visibilidad de un adjunto cambiada",
+  DOSSIER_CLOSED: "Expediente del lote cerrado",
   // Aprobación y rechazo del flujo anterior a la Ola 1 (`/v1/wineries/:id/approve|reject`).
   WINERY_APPROVED: "Bodega aprobada",
   WINERY_REJECTED: "Bodega rechazada",
@@ -125,6 +141,10 @@ export const RESOURCE_TYPE_LABELS: Record<string, string> = {
   invitation: "Invitación",
   user: "Persona",
   setting: "Parámetro",
+  lot: "Lote",
+  lot_attachment: "Adjunto del lote",
+  correction: "Corrección",
+  bottle_code_export: "Exportación de códigos de botella",
   waitlist_entry: "Inscripción en la lista de espera",
   terroir: "Parcela",
   harvest_batch: "Vendimia",
@@ -181,3 +201,54 @@ export const waitlistDrinkLabel = (v: string | null | undefined) => (v ? (WAITLI
 
 export const LOCALE_LABELS: Record<string, string> = { es: "Español", en: "Inglés" };
 export const localeLabel = (l: string) => LOCALE_LABELS[l] ?? l;
+
+// Lotes (contrato de la Ola 2 §2): etapa calculada por el servidor, tipo y laboratorio.
+type BadgeTone = "info" | "success" | "warning" | "danger" | "neutral" | "accent";
+
+export const LOT_STAGE_LABELS: Record<string, string> = {
+  ORIGIN: "Origen",
+  HARVEST: "Vendimia",
+  FERMENTING: "Fermentación",
+  AGING: "Crianza",
+  DISTILLING: "Destilación",
+  RESTING: "Reposo",
+  BOTTLED: "Embotellado",
+  CERTIFIED: "Certificado",
+  ANCHORED: "Anclado",
+  REJECTED: "Rechazado",
+  DISCARDED: "Descartado",
+};
+export const lotStageLabel = (s: string) => LOT_STAGE_LABELS[s] ?? auditActionLabel(s);
+
+export const LOT_STAGE_TONES: Record<string, BadgeTone> = {
+  ORIGIN: "neutral",
+  HARVEST: "info",
+  FERMENTING: "info",
+  AGING: "warning",
+  DISTILLING: "info",
+  RESTING: "warning",
+  BOTTLED: "accent",
+  CERTIFIED: "success",
+  ANCHORED: "success",
+  REJECTED: "danger",
+  DISCARDED: "neutral",
+};
+
+/** `null`: el lote aún no decidió su destino (se fija en la bifurcación). */
+export const lotProductLabel = (t: string | null) =>
+  t === null ? "Sin decidir" : ({ WINE: "Vino", SINGANI: "Singani" }[t] ?? t);
+
+export const LAB_STATUS_LABELS: Record<string, string> = {
+  NOT_RECORDED: "Sin análisis",
+  CONFORMING: "Conforme",
+  NON_CONFORMING: "No conforme",
+  INCOMPLETE: "Incompleto",
+};
+export const labStatusLabel = (s: string) => LAB_STATUS_LABELS[s] ?? s;
+
+export const LAB_STATUS_TONES: Record<string, BadgeTone> = {
+  NOT_RECORDED: "neutral",
+  CONFORMING: "success",
+  NON_CONFORMING: "danger",
+  INCOMPLETE: "warning",
+};
