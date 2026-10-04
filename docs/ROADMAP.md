@@ -70,6 +70,17 @@ Contrato: `plan/contratos/o1b-lista-de-espera.md` §2 con las precisiones del ba
 - [x] Pruebas: unitarias (filtros ↔ URL, cuerpo del PATCH, número de WhatsApp, recuento del CSV, descarga), cliente contra los handlers reales de los mocks (lista, orígenes, PATCH, CSV, 403 de soporte) y `e2e/waitlist.spec.ts` (tablero → lista, pestañas, origen, contactar con nota, volver a nuevo, CSV, soporte sin acciones, axe y teclado) · 2026-10-01
 - [ ] Contra el backend real de desarrollo (`e2e/backend-real.spec.ts`): pendiente de añadir el recorrido de la lista de espera
 
+## Ola 2 · La plataforma lee la trazabilidad (O2, opcional del contrato §17)
+
+Contrato: `plan/contratos/o2-erp-confiable.md` §14 (permisos), §17 (fila «Backoffice») y §20 (la plataforma solo lee: las escrituras dan 403 `TRC_PLATFORM_READ_ONLY`). Mocks `0.5.0-rc.3` (cierre H2).
+
+- [x] `@drinks-on-chain/mocks` 0.5.0-rc.3: sin cambios en las pantallas de la plataforma; el panel `/__mocks` toma los escenarios de `SCENARIOS` y `SCENARIO_DESCRIPTIONS` (lo único que dejó de compilar); textos de las acciones y recursos de la bitácora de la Ola 2 (`LOT_CREATED`, `BOTTLED`, `DOSSIER_CLOSED`…, recurso `lot`) · 2026-10-02
+- [x] Ficha de bodega · pestaña «Lotes» de solo lectura (`GET /v1/lots?wineryId=`): tabla densa con referencia, nombre, tipo, etapa, candado siguiente, botellas, laboratorio, código de lote e incidencias abiertas; etapa y búsqueda en la URL; estados vacío, de carga y de error; sin acciones de escritura; enlace «Ver pasaporte público» a `{NEXT_PUBLIC_URL_APP}/b/{código de lote}` (`links.passport()`); visible para quien ve la ficha · 2026-10-02
+- [x] Configuración: aviso en el grupo de trazabilidad y en cada regla que se aplica al crear el lote (reposo, crianza mínima, altitud, cepas, mermas, límites de laboratorio…) de que un cambio solo afecta a los lotes que se creen después · 2026-10-02
+- [x] Pruebas: unitarias (filtros ↔ URL, candado, enlace al pasaporte, reglas de lote), cliente contra los handlers reales (lotes por bodega, filtros, 403 `TRC_PLATFORM_READ_ONLY`) y `e2e/lots.spec.ts` (pestaña con soporte, filtros, pasaporte, sin escrituras, teclado, bodega sin lotes, aviso de configuración); `?pestana=lotes` en la auditoría axe · 2026-10-02
+- [ ] Detalle del lote en solo lectura (línea de tiempo, grafo, expediente) desde la pestaña: no está en el contrato de esta ola
+- [ ] Recorrido de los lotes contra el backend real en `e2e/backend-real.spec.ts` (cuando el servidor de desarrollo despliegue el cierre H2)
+
 ## 4C · Tokenización (Ola 3)
 
 - [ ] Bandeja de solicitudes de tokenización, datos comerciales, colecciones con estado de emisión y explorador

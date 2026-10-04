@@ -33,6 +33,8 @@ import { can } from "@/lib/platform/permissions";
 import {
   APPLIES_AT_LABELS,
   LEVEL_LABELS,
+  LOT_RULES_NOTICE,
+  appliesToNewLotsOnly,
   draftFrom,
   formatSettingValue,
   isBelowLegalMinimum,
@@ -117,6 +119,12 @@ function SettingScreen({ setting: s }: { setting: SettingDefinition }) {
           }
         />
       </div>
+
+      {appliesToNewLotsOnly(s) && (
+        <Alert tone="info" role="note" title={LOT_RULES_NOTICE.title}>
+          {LOT_RULES_NOTICE.setting}
+        </Alert>
+      )}
 
       <Card className="p-5">
         <KeyValueList

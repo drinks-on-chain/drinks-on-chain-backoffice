@@ -31,13 +31,15 @@ import { ApiError, errorMessage } from "@/lib/api/errors";
 import { useMe } from "@/lib/auth/hooks";
 import { fmtDate, fmtDateTime, fmtNumber } from "@/lib/format";
 import { categoryLabel } from "@/lib/platform/labels";
+import { LOT_PARAMS } from "@/lib/platform/lots";
 import { can } from "@/lib/platform/permissions";
 import { useWinery } from "@/lib/platform/wineries";
 import { oneOf, useUrlParams } from "@/lib/use-url-params";
 import { EditProfilePanel, StatusActionDialog, TransferOwnershipDialog, type WineryDialog } from "./winery-actions";
+import { LotsPanel } from "./lots-panel";
 import { TeamPanel } from "./team-panel";
 
-const TABS = ["perfil", "equipo", "historial"] as const;
+const TABS = ["perfil", "equipo", "lotes", "historial"] as const;
 type Tab = (typeof TABS)[number];
 
 const muted = (text: string) => <span className="text-fg-subtle">{text}</span>;
@@ -112,10 +114,17 @@ export function WineryDetailView({ id }: { id: string }) {
         />
       </div>
 
-      <Tabs value={tab} onValueChange={(v) => url.set({ pestana: v === "perfil" ? undefined : v })}>
+      <Tabs
+        value={tab}
+        // Los filtros de la pestaña «Lotes» no acompañan a las demás.
+        onValueChange={(v) =>
+          url.set({ pestana: v === "perfil" ? undefined : v, [LOT_PARAMS.stage]: undefined, [LOT_PARAMS.q]: undefined })
+        }
+      >
         <TabsList aria-label="Secciones de la bodega">
           <TabsTrigger value="perfil">Perfil</TabsTrigger>
           <TabsTrigger value="equipo">Equipo ({fmtNumber(w.membersCount)})</TabsTrigger>
+          <TabsTrigger value="lotes">Lotes</TabsTrigger>
           <TabsTrigger value="historial">Historial</TabsTrigger>
         </TabsList>
         <TabsContent value="perfil" className="pt-5">
@@ -123,6 +132,9 @@ export function WineryDetailView({ id }: { id: string }) {
         </TabsContent>
         <TabsContent value="equipo" className="pt-5">
           <TeamPanel winery={w} />
+        </TabsContent>
+        <TabsContent value="lotes" className="pt-5">
+          <LotsPanel winery={w} />
         </TabsContent>
         <TabsContent value="historial" className="pt-5">
           <HistoryTab winery={w} />

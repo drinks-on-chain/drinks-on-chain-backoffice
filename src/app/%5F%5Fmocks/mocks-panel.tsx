@@ -13,6 +13,7 @@ import {
   setScenario,
   type ScenarioName,
 } from "@drinks-on-chain/mocks/browser";
+import { SCENARIO_DESCRIPTIONS } from "@drinks-on-chain/mocks/handlers";
 import {
   DEMO_PASSWORD,
   DEMO_TOTP_SECRET,
@@ -42,13 +43,16 @@ import { fmtDateTime } from "@/lib/format";
 import { es } from "@/lib/i18n/es";
 import { roleLabel } from "@/lib/platform/labels";
 
-const SCENARIO_LABELS: Record<ScenarioName, string> = {
+// La lista de escenarios crece con las olas (`SCENARIOS`): los de respuesta tienen un nombre corto
+// propio y el resto (los de datos de la trazabilidad) usa la descripción del paquete.
+const SCENARIO_LABELS: Partial<Record<ScenarioName, string>> = {
   normal: "Normal",
   empty: "Listas vacías",
   error: "Error del servidor (500)",
   slow: "Lento (+2,5 s)",
   offline: "Sin conexión",
 };
+const scenarioLabel = (scenario: ScenarioName) => SCENARIO_LABELS[scenario] ?? SCENARIO_DESCRIPTIONS[scenario];
 
 export function MocksPanel() {
   const router = useRouter();
@@ -124,7 +128,7 @@ export function MocksPanel() {
             <Select
               value={scenario}
               onValueChange={changeScenario}
-              options={SCENARIOS.map((s) => ({ value: s, label: SCENARIO_LABELS[s] }))}
+              options={SCENARIOS.map((s) => ({ value: s, label: scenarioLabel(s) }))}
             />
           </Field>
           <Button
