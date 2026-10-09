@@ -35,19 +35,26 @@ import { LOT_PARAMS } from "@/lib/platform/lots";
 import { can } from "@/lib/platform/permissions";
 import { useWinery } from "@/lib/platform/wineries";
 import { oneOf, useUrlParams } from "@/lib/use-url-params";
+import { ChainPanel } from "./chain-panel";
 import { EditProfilePanel, StatusActionDialog, TransferOwnershipDialog, type WineryDialog } from "./winery-actions";
 import { LotsPanel } from "./lots-panel";
 import { TeamPanel } from "./team-panel";
 
-const TABS = ["perfil", "equipo", "lotes", "historial"] as const;
+const TABS = ["perfil", "equipo", "lotes", "cadena", "historial"] as const;
 type Tab = (typeof TABS)[number];
 
 const muted = (text: string) => <span className="text-fg-subtle">{text}</span>;
 
-/** 4B · Ficha de bodega: perfil, estado e historial, equipo y acciones con motivo. */
+/**
+ * 4B · Ficha de bodega: perfil, estado e historial, equipo y acciones con motivo; lotes en lectura
+ * (Ola 2) e identidad en la red (Ola 3, pestaña «Cadena»).
+ */
 export function WineryDetailView({ id }: { id: string }) {
+  const me = useMe();
   const url = useUrlParams();
-  const tab: Tab = oneOf(TABS, url.get("pestana")) ?? "perfil";
+  const canSeeChain = can(me.data, "chain.read");
+  const requested: Tab = oneOf(TABS, url.get("pestana")) ?? "perfil";
+  const tab: Tab = requested === "cadena" && me.data && !canSeeChain ? "perfil" : requested;
   const winery = useWinery(id);
   const [dialog, setDialog] = useState<WineryDialog | null>(null);
   const w = winery.data;
@@ -125,6 +132,7 @@ export function WineryDetailView({ id }: { id: string }) {
           <TabsTrigger value="perfil">Perfil</TabsTrigger>
           <TabsTrigger value="equipo">Equipo ({fmtNumber(w.membersCount)})</TabsTrigger>
           <TabsTrigger value="lotes">Lotes</TabsTrigger>
+          {canSeeChain && <TabsTrigger value="cadena">Cadena</TabsTrigger>}
           <TabsTrigger value="historial">Historial</TabsTrigger>
         </TabsList>
         <TabsContent value="perfil" className="pt-5">
@@ -136,6 +144,11 @@ export function WineryDetailView({ id }: { id: string }) {
         <TabsContent value="lotes" className="pt-5">
           <LotsPanel winery={w} />
         </TabsContent>
+        {canSeeChain && (
+          <TabsContent value="cadena" className="pt-5">
+            <ChainPanel winery={w} />
+          </TabsContent>
+        )}
         <TabsContent value="historial" className="pt-5">
           <HistoryTab winery={w} />
         </TabsContent>

@@ -8,6 +8,7 @@ import {
   SCENARIOS,
   expireAccessTokens,
   getScenario,
+  mockChain,
   mockMailbox,
   resetErpDb,
   setScenario,
@@ -149,6 +150,34 @@ export function MocksPanel() {
             }}
           >
             {es.mocks.expire}
+          </Button>
+        </div>
+      </Card>
+
+      <Card className="grid gap-4 p-6">
+        <CardHeader
+          title={es.mocks.chain}
+          description="Las transacciones de la Ola 3 avanzan solas, un paso cada 3 s. El estado vive en memoria: recargar la página lo devuelve al escenario."
+        />
+        <div className="flex flex-wrap items-center gap-4">
+          <Button
+            variant="secondary"
+            onClick={() => {
+              mockChain.settle();
+              void queryClient.invalidateQueries();
+              toast({ title: es.mocks.chainSettled, tone: "success" });
+            }}
+          >
+            {es.mocks.chainSettle}
+          </Button>
+          <Button
+            variant="secondary"
+            onClick={() => {
+              mockChain.failNext();
+              toast({ title: es.mocks.chainFailArmed, tone: "info" });
+            }}
+          >
+            {es.mocks.chainFailNext}
           </Button>
         </div>
       </Card>
