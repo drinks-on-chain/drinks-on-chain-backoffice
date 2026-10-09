@@ -577,7 +577,7 @@ test("soporte lee la tokenización y la cadena, sin ningún control de escritura
   await settled(page);
   await expect(page.getByRole("button", { name: /Resolver/ })).toHaveCount(0);
   await page
-    .getByRole("button", { name: /^Ver: / })
+    .getByRole("button", { name: /^Ver : / })
     .first()
     .click();
   await expect(page.getByRole("dialog")).toContainText("las alertas las resuelven operaciones y administración");
