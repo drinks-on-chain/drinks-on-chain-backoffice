@@ -11,7 +11,6 @@ const schema = z.object({
   urlWhatsapp: z.string().url(),
   turnstileSiteKey: z.string(),
   flags: z.object({
-    tokenization: z.boolean(),
     pickupPoints: z.boolean(),
     support: z.boolean(),
     orders: z.boolean(),
@@ -27,9 +26,8 @@ export const env = schema.parse({
   // Enlaces «Escribir por WhatsApp» de la lista de espera (por defecto el servicio de enlaces).
   urlWhatsapp: process.env.NEXT_PUBLIC_URL_WHATSAPP || "https://wa.me",
   turnstileSiteKey: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? "",
-  // Módulos de otras olas (4C, 4D, 4F): ocultos en el menú hasta que existan (plan/03 §1).
+  // Módulos de otras olas (4D, 4F): ocultos en el menú hasta que existan (plan/03 §1).
   flags: {
-    tokenization: process.env.NEXT_PUBLIC_FLAG_TOKENIZATION === "1",
     pickupPoints: process.env.NEXT_PUBLIC_FLAG_PICKUP_POINTS === "1",
     support: process.env.NEXT_PUBLIC_FLAG_SUPPORT === "1",
     orders: process.env.NEXT_PUBLIC_FLAG_ORDERS === "1",

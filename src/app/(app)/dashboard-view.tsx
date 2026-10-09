@@ -6,13 +6,18 @@ import { AlertsFeed, Button, Card, CardHeader, ErrorState, KpiCard, SkeletonText
 import { PageHeader } from "@/components/page-header";
 import { errorMessage } from "@/lib/api/errors";
 import { useMe } from "@/lib/auth/hooks";
-import { fmtDateTime, fmtNumber, fmtRelative } from "@/lib/format";
+import { fmtAge, fmtDateTime, fmtNumber, fmtRelative, fmtXlm } from "@/lib/format";
+import { networkLabel, reconciliationStatus } from "@/lib/platform/chain-labels";
+import { transactionsHref } from "@/lib/platform/chain-utils";
+import { collectionsHref } from "@/lib/platform/collections-utils";
 import { auditActionLabel, auditActorLabel } from "@/lib/platform/labels";
 import { useDashboard } from "@/lib/platform/hooks";
 import { can } from "@/lib/platform/permissions";
+import { tokenizationHref } from "@/lib/platform/tokenization-utils";
 import { waitlistHref } from "@/lib/platform/waitlist-utils";
 
-// 4A · Tablero (`GET /v1/platform/dashboard`, contrato de la Ola 1 §8, PLT-06).
+// 4A · Tablero (`GET /v1/platform/dashboard`, contrato de la Ola 1 §8, PLT-06), con los bloques
+// `tokenization` y `chain` de la Ola 3 (contrato O3 §11).
 export function DashboardView() {
   const me = useMe();
   const dashboard = useDashboard();
@@ -21,13 +26,15 @@ export function DashboardView() {
   // Lista de espera (contrato O1b): una tarjeta más para quien tiene la capacidad `waitlist`.
   const showWaitlist = can(me.data, "waitlist.read");
   const kpiColumns = showWaitlist ? "lg:grid-cols-3 2xl:grid-cols-5" : "xl:grid-cols-4";
+  const showTokenization = can(me.data, "tokenization.read");
+  const showChain = can(me.data, "chain.read");
 
   return (
     <div className="grid gap-6">
       <PageHeader
         eyebrow="Operaciones"
         title="Tablero"
-        description="Solicitudes, bodegas, invitaciones, equipo y lista de espera de un vistazo, con las alertas y la última actividad."
+        description="Solicitudes, bodegas, invitaciones, equipo, lista de espera, tokenización y red de un vistazo, con las alertas y la última actividad."
       />
 
       {dashboard.isError ? (
@@ -140,6 +147,155 @@ export function DashboardView() {
             )}
           </section>
 
+          {(showTokenization || showChain) && (
+            <section aria-labelledby="tablero-tokenizacion" className="grid gap-3">
+              <h2 id="tablero-tokenizacion" className="m-0 font-ui text-md font-semibold text-fg">
+                Tokenización y cadena
+              </h2>
+              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                {showTokenization && (
+                  <>
+                    <KpiCard
+                      label="Solicitudes de tokenización"
+                      loading={loading}
+                      loadingLabel="Cargando las solicitudes de tokenización"
+                      value={d ? fmtNumber(openTokenization(d)) : "—"}
+                      tone={d && d.tokenization.submitted > 0 ? "warning" : "neutral"}
+                      delta={d ? oldestLabel(openTokenization(d), d.tokenization.oldestOpenHours) : undefined}
+                      breakdown={
+                        d
+                          ? [
+                              breakdownLink(
+                                "submitted",
+                                "Sin tomar",
+                                d.tokenization.submitted,
+                                tokenizationHref({ status: "SUBMITTED" }),
+                              ),
+                              breakdownLink(
+                                "inReview",
+                                "En revisión",
+                                d.tokenization.inReview,
+                                tokenizationHref({ status: "IN_REVIEW" }),
+                              ),
+                              breakdownLink(
+                                "changes",
+                                "Cambios pedidos",
+                                d.tokenization.changesRequested,
+                                tokenizationHref({ status: "CHANGES_REQUESTED" }),
+                              ),
+                            ]
+                          : undefined
+                      }
+                      href={tokenizationHref()}
+                      linkLabel="Ver la bandeja de tokenización"
+                      linkComponent={Link}
+                    />
+                    <KpiCard
+                      label="Colecciones publicadas"
+                      loading={loading}
+                      loadingLabel="Cargando las colecciones"
+                      value={d ? fmtNumber(d.tokenization.collectionsPublished) : "—"}
+                      tone={
+                        d && d.tokenization.mintFailures > 0
+                          ? "danger"
+                          : d && d.tokenization.shortfallsOpen > 0
+                            ? "warning"
+                            : "neutral"
+                      }
+                      breakdown={
+                        d
+                          ? [
+                              breakdownLink(
+                                "minting",
+                                "Emitiendo",
+                                d.tokenization.collectionsMinting,
+                                collectionsHref({ status: "MINTING" }),
+                              ),
+                              breakdownLink(
+                                "mintFailures",
+                                "Emisiones fallidas",
+                                d.tokenization.mintFailures,
+                                collectionsHref({ mintStatus: "FAILED" }),
+                              ),
+                              breakdownLink(
+                                "shortfalls",
+                                "Faltantes sin decidir",
+                                d.tokenization.shortfallsOpen,
+                                collectionsHref(),
+                              ),
+                            ]
+                          : undefined
+                      }
+                      href={collectionsHref({ status: "PUBLISHED" })}
+                      linkLabel="Ver las colecciones publicadas"
+                      linkComponent={Link}
+                    />
+                  </>
+                )}
+                {showChain && (
+                  <>
+                    <KpiCard
+                      label="Alertas de la cadena"
+                      loading={loading}
+                      loadingLabel="Cargando el estado de la red"
+                      value={d ? fmtNumber(d.chain.openAlerts.critical + d.chain.openAlerts.warning) : "—"}
+                      tone={
+                        d && d.chain.openAlerts.critical > 0
+                          ? "danger"
+                          : d && d.chain.openAlerts.warning > 0
+                            ? "warning"
+                            : "neutral"
+                      }
+                      delta={d ? reconciliationLabel(d) : undefined}
+                      breakdown={
+                        d
+                          ? [
+                              breakdownLink(
+                                "critical",
+                                "Críticas",
+                                d.chain.openAlerts.critical,
+                                "/cadena/alertas?nivel=CRITICAL",
+                              ),
+                              breakdownLink(
+                                "failed",
+                                "Transacciones fallidas",
+                                d.chain.failedTransactions,
+                                transactionsHref({ status: "FAILED" }),
+                              ),
+                              breakdownLink(
+                                "stuck",
+                                "Atascadas",
+                                d.chain.stuckTransactions,
+                                transactionsHref({ status: "SUBMITTED" }),
+                              ),
+                            ]
+                          : undefined
+                      }
+                      href="/cadena/alertas"
+                      linkLabel="Ver las alertas de la cadena"
+                      linkComponent={Link}
+                    />
+                    <KpiCard
+                      label={d ? `Saldo de operaciones · ${networkLabel(d.chain.network)}` : "Saldo de operaciones"}
+                      loading={loading}
+                      loadingLabel="Cargando los saldos de la plataforma"
+                      value={d ? <span className="text-2xl">{fmtXlm(d.chain.operationsBalanceXlm)}</span> : "—"}
+                      delta={d ? `Indexador: ${fmtNumber(d.chain.indexerLagSeconds)} s de retraso` : undefined}
+                      breakdown={
+                        d
+                          ? [{ key: "anchor", label: "Cuenta de anclaje", value: fmtXlm(d.chain.anchorBalanceXlm) }]
+                          : undefined
+                      }
+                      href="/cadena/cuentas"
+                      linkLabel="Ver las cuentas de la plataforma"
+                      linkComponent={Link}
+                    />
+                  </>
+                )}
+              </div>
+            </section>
+          )}
+
           <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
             <Card className="p-5">
               <AlertsFeed
@@ -189,6 +345,20 @@ function breakdownLink(key: string, label: string, value: number, href: string) 
 
 const openApplications = (d: Dashboard) =>
   d.applications.received + d.applications.inReview + d.applications.meetingScheduled;
+
+const openTokenization = (d: Dashboard) =>
+  d.tokenization.submitted + d.tokenization.inReview + d.tokenization.changesRequested;
+
+/** Antigüedad de la solicitud de tokenización abierta más antigua. */
+const oldestLabel = (open: number, hours: number) =>
+  open === 0 ? "Ninguna abierta" : `La más antigua lleva ${fmtAge(hours)}`;
+
+/** Última conciliación con la red: resultado y cuándo. */
+function reconciliationLabel(d: Dashboard) {
+  const last = d.chain.lastReconciliation;
+  if (!last) return "Sin conciliaciones todavía";
+  return `Última conciliación: ${reconciliationStatus(last.status).label.toLowerCase()} · ${fmtRelative(last.at)}`;
+}
 
 const last24hLabel = (n: number) => (n === 0 ? "Ninguna en las últimas 24 h" : `${fmtNumber(n)} en las últimas 24 h`);
 

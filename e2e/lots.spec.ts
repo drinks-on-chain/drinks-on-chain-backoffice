@@ -2,7 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { STAFF, axe, login, settled, trackErrors } from "./support";
 
 // Ola 2 · La plataforma solo lee la trazabilidad (contrato de la Ola 2 §14, §17 y §20): pestaña
-// «Lotes» de la ficha de bodega (9 lotes de la Destilería Cinti Viejo en los mocks 0.5) y aviso de
+// «Lotes» de la ficha de bodega (10 lotes de la Destilería Cinti Viejo en los mocks 0.6) y aviso de
 // las reglas de lote en Configuración.
 
 const CINTI_VIEJO = "/bodegas/04de1441-989d-5c3e-b06f-033f3961d19d";
@@ -30,7 +30,7 @@ test("pestaña «Lotes» de la ficha de bodega: solo lectura, filtros en la URL 
   const panel = page.getByRole("tabpanel", { name: "Lotes" });
   await expect(panel.getByRole("heading", { name: "Lotes", level: 2 })).toBeVisible();
   await expect(panel.getByText(/Solo lectura: la trazabilidad la registra la bodega en el ERP/)).toBeVisible();
-  await expect(results(page, "9 lotes")).toBeVisible();
+  await expect(results(page, "10 lotes")).toBeVisible();
   for (const name of [
     "Referencia",
     "Nombre",
@@ -45,11 +45,12 @@ test("pestaña «Lotes» de la ficha de bodega: solo lectura, filtros en la URL 
     await expect(panel.getByRole("columnheader", { name })).toBeVisible();
   }
 
-  // El caso del contrato: certificado, conforme, con su código de lote y el enlace al pasaporte.
+  // El caso del contrato: certificado y anclado, conforme, con su código de lote y el enlace al pasaporte.
   const certified = row(page, "CVJ-L2026-005");
   await expect(certified).toContainText("Singani Gran Reserva 2026");
   await expect(certified).toContainText("Singani");
-  await expect(certified).toContainText("Certificado");
+  // Con la Ola 3 el expediente certificado ya está anclado en la red.
+  await expect(certified).toContainText("Anclado");
   await expect(certified).toContainText("2.950");
   await expect(certified).toContainText("Conforme");
   await expect(certified).toContainText("CVJ-2026-SINGANI-004");
@@ -77,7 +78,7 @@ test("pestaña «Lotes» de la ficha de bodega: solo lectura, filtros en la URL 
   await expect(page.getByText("Ningún lote coincide", { exact: true })).toBeVisible();
   await panel.getByRole("button", { name: "Limpiar filtros" }).last().click();
   await expect(page).toHaveURL(/pestana=lotes$/);
-  await expect(results(page, "9 lotes")).toBeVisible();
+  await expect(results(page, "10 lotes")).toBeVisible();
 
   await page.getByRole("searchbox", { name: "Buscar" }).fill("wine-003");
   await expect(results(page, "1 lote")).toBeVisible();
@@ -96,7 +97,7 @@ test("pestaña «Lotes» de la ficha de bodega: solo lectura, filtros en la URL 
   await page.keyboard.press("ArrowRight");
   await expect(page.getByRole("tab", { name: "Lotes" })).toBeFocused();
   await expect(page).toHaveURL(/pestana=lotes$/);
-  await expect(results(page, "9 lotes")).toBeVisible();
+  await expect(results(page, "10 lotes")).toBeVisible();
 
   // Una bodega invitada todavía no tiene lotes.
   await page.goto(`${INVITED}?pestana=lotes`);

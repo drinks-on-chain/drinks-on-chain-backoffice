@@ -123,9 +123,11 @@ describe("lotes y reglas de lote contra los handlers de los mocks", () => {
     const updated = all.items.map((l) => l.updatedAt);
     expect(updated).toEqual([...updated].sort().reverse());
 
-    const certified = await fetchWineryLots(cinti, { stage: "CERTIFIED", limit: 20 });
-    expect(certified.items.map((l) => l.lotCode)).toEqual(["CVJ-2026-SINGANI-004"]);
-    expect(certified.items[0]).toMatchObject({ dossierStatus: "CLOSED", labStatus: "CONFORMING" });
+    // Desde los mocks 0.6 el anclaje ocurre: el lote certificado de la Ola 2 ya está `ANCHORED`.
+    const anchored = await fetchWineryLots(cinti, { stage: "ANCHORED", limit: 20 });
+    expect(anchored.items.map((l) => l.lotCode)).toEqual(["CVJ-2026-SINGANI-004"]);
+    expect(anchored.items[0]).toMatchObject({ dossierStatus: "CLOSED", labStatus: "CONFORMING" });
+    expect((await fetchWineryLots(cinti, { stage: "CERTIFIED", limit: 20 })).total).toBe(0);
 
     const resting = await fetchWineryLots(cinti, { stage: "RESTING", limit: 20 });
     expect(resting.items).toHaveLength(1);

@@ -54,6 +54,12 @@ describe("can() del back office", () => {
       ["audit.verify", ["SUPERADMIN", "ADMIN"]],
       ["waitlist.read", ["SUPERADMIN", "ADMIN", "OPERATIONS", "SUPPORT"]],
       ["waitlist.manage", ["SUPERADMIN", "ADMIN", "OPERATIONS"]],
+      // Ola 3 (contrato O3 §10): soporte lee; `chain.admin`, solo administración.
+      ["tokenization.read", ["SUPERADMIN", "ADMIN", "OPERATIONS", "SUPPORT"]],
+      ["tokenization.manage", ["SUPERADMIN", "ADMIN", "OPERATIONS"]],
+      ["chain.read", ["SUPERADMIN", "ADMIN", "OPERATIONS", "SUPPORT"]],
+      ["chain.manage", ["SUPERADMIN", "ADMIN", "OPERATIONS"]],
+      ["chain.admin", ["SUPERADMIN", "ADMIN"]],
     ];
     for (const [action, allowed] of table) {
       for (const role of ["SUPERADMIN", "ADMIN", "OPERATIONS", "SUPPORT"] as const) {
