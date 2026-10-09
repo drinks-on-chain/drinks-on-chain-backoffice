@@ -89,7 +89,11 @@ export async function axe(page: Page) {
 // ---------------------------------------------------------------------------
 
 /** Lo que `startMockWorker` publica en `window.__docMocks` y usan estas pruebas. */
-type DocMocks = { setScenario: (name: string) => void; chain: { settle: () => void } };
+type DocMocks = {
+  setScenario: (name: string) => void;
+  chain: { settle: () => void };
+  tokenization: { resubmitAsWinery: (requestId: string, options?: { message?: string }) => unknown };
+};
 type MocksWindow = Window & { __docMocks: DocMocks };
 
 /**
@@ -108,6 +112,15 @@ export async function useScenario(page: Page, name: string) {
  */
 export const settleChain = (page: Page) =>
   page.evaluate(() => (window as unknown as MocksWindow).__docMocks.chain.settle());
+
+/**
+ * La bodega atiende los cambios pedidos y reenvía la solicitud, como haría su dueño desde el ERP
+ * (`mockTokenization.resubmitAsWinery`): completa los campos que señaló operaciones.
+ */
+export const resubmitAsWinery = (page: Page, requestId: string) =>
+  page.evaluate((id) => {
+    (window as unknown as MocksWindow).__docMocks.tokenization.resubmitAsWinery(id, { message: "Atendido." });
+  }, requestId);
 
 /**
  * Navega por el menú lateral. El estado de la Ola 3 de los mocks vive en memoria: una recarga

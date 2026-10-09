@@ -108,6 +108,8 @@ const EXPLANATIONS: Record<string, (d: RuleDetail | undefined) => string> = {
     `${d?.meta.kind ? `«${txKindLabel(str(d.meta.kind))}»` : "Esta transacción"} no se puede abandonar: emisiones, anclajes e identidad deben terminar. Reinténtala.`,
   CHN_CONTRACT_PAUSED: () =>
     "El contrato de la bodega está pausado en la red: mientras dure la pausa no se publica ni se emite. Reanúdalo desde la ficha de la bodega.",
+  CHN_DISABLED: () =>
+    "La cadena no está configurada en este entorno (faltan las cuentas de la plataforma o el código del contrato): no se puede aprovisionar, pausar ni reanudar hasta que se configure en el servidor.",
   CHN_CONTRACT_ALREADY_PAUSED: () => "El contrato ya está pausado en la red.",
   CHN_CONTRACT_NOT_PAUSED: () => "El contrato no está pausado en la red.",
   CHN_IDENTITY_ALREADY_ACTIVE: () => "La identidad de la bodega ya está activa: no hay nada que reaprovisionar.",

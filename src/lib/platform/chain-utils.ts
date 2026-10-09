@@ -185,6 +185,10 @@ export function subjectHref(subject: { type: string; id: string }, wineryId: str
     case "TRANSACTION":
     case "CHAIN_TRANSACTION":
       return transactionsHref({ open: subject.id });
+    case "MINT":
+      return `/cadena?${TX_PARAMS.subjectType}=MINT&${TX_PARAMS.subjectId}=${encodeURIComponent(subject.id)}`;
+    case "CHAIN_EVENT":
+      return "/cadena/eventos?sinOrigen=1";
     case "ACCOUNT":
     case "PLATFORM_ACCOUNT":
     case "PLATFORM":
@@ -207,6 +211,10 @@ export function balanceWarnings(accounts: Pick<PlatformChainAccounts, "operation
   }
   return out;
 }
+
+/** La cadena está configurada si el registro público publica la cuenta de operaciones (§3.2). */
+export const chainConfigured = (registry: { platform: { operationsAccount: string | null } }) =>
+  registry.platform.operationsAccount !== null;
 
 /** Al código del contrato le quedan pocos días de vida en la red (la tarea diaria lo extiende, §8.3). */
 export const CODE_TTL_WARNING_DAYS = 14;

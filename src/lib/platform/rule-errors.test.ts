@@ -92,6 +92,7 @@ describe("errores TOK_… y CHN_… explicados", () => {
     expect(text("CHN_RECONCILIATION_RUNNING")).toMatch(/Ya hay una conciliación en curso/);
     expect(text("CHN_ALERT_ALREADY_RESOLVED")).toMatch(/ya estaba resuelta/);
     expect(text("TOK_WINERY_NOT_ACTIVE")).toMatch(/suspendida o revocada/);
+    expect(text("CHN_DISABLED")).toMatch(/La cadena no está configurada en este entorno/);
   });
 
   it("un 422 genérico marca sus campos y lo demás va a las notas", () => {

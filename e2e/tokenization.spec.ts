@@ -1,5 +1,16 @@
 import { expect, test, type Page } from "@playwright/test";
-import { STAFF, axe, capture, login, nav, settleChain, settled, trackErrors, useScenario } from "./support";
+import {
+  STAFF,
+  axe,
+  capture,
+  login,
+  nav,
+  resubmitAsWinery,
+  settleChain,
+  settled,
+  trackErrors,
+  useScenario,
+} from "./support";
 
 // Ola 3 · 4C: tokenización, colecciones y cadena contra los mocks 0.6 (contrato
 // `plan/contratos/o3-tokenizacion.md`). La red es la simulada del paquete: las transacciones
@@ -203,7 +214,7 @@ test("bandeja → pedir cambios → aprobar → emisión confirmada → publicar
   // La colección nueva está en la lista, en tarjetas y en tabla.
   await nav(page, "Colecciones");
   await expect(h1(page, "Colecciones")).toBeVisible();
-  await expect(count(page, "4 colecciones")).toBeVisible();
+  await expect(count(page, "5 colecciones")).toBeVisible();
   await settled(page);
   expect(await axe(page), "colecciones (tarjetas)").toEqual([]);
   await capture(page, "09-colecciones-tarjetas");
@@ -420,7 +431,7 @@ test("cadena: cuentas y saldos, conciliación, e identidad de la bodega (pausar 
 
   await nav(page, "Cadena");
   const sections = page.getByRole("navigation", { name: "Secciones de la cadena" });
-  await expect(count(page, "10 transacciones")).toBeVisible();
+  await expect(count(page, "13 transacciones")).toBeVisible();
 
   // Cuentas de la plataforma y saldos; los enlaces al explorador salen del backend.
   await sections.getByRole("link", { name: "Cuentas y saldos" }).click();
@@ -437,7 +448,7 @@ test("cadena: cuentas y saldos, conciliación, e identidad de la bodega (pausar 
 
   // Conciliación manual.
   await sections.getByRole("link", { name: "Conciliaciones" }).click();
-  await expect(count(page, "3 conciliaciones")).toBeVisible();
+  await expect(count(page, "5 conciliaciones")).toBeVisible();
   await page.getByRole("button", { name: "Lanzar una conciliación" }).click();
   const start = page.getByRole("dialog", { name: "Lanzar una conciliación" });
   await expect(start).toBeVisible();
@@ -446,7 +457,7 @@ test("cadena: cuentas y saldos, conciliación, e identidad de la bodega (pausar 
   await start.getByRole("button", { name: "Lanzar" }).click();
   await expect(start).toHaveCount(0);
   await expect(toast(page, /Conciliación (terminada|lanzada)/)).toBeVisible();
-  await expect(count(page, "4 conciliaciones")).toBeVisible();
+  await expect(count(page, "6 conciliaciones")).toBeVisible();
   await page
     .getByRole("button", { name: /Ver la conciliación/ })
     .first()
@@ -513,7 +524,157 @@ test("cadena: cuentas y saldos, conciliación, e identidad de la bodega (pausar 
   expect(errors).toEqual([]);
 });
 
+test("ciclo completo de una solicitud: pedir cambios → la bodega reenvía → tomar → aprobar y publicar al emitir", async ({
+  page,
+}) => {
+  test.slow();
+  const errors = trackErrors(page);
+  await login(page, STAFF.operations);
+  await nav(page, "Tokenización");
+  await page.getByRole("link", { name: "Singani El Molino 2026", exact: true }).click();
+  await expect(h1(page, "Singani El Molino 2026")).toBeVisible();
+  const requestId = new URL(page.url()).pathname.split("/").pop()!;
+
+  // Operaciones pide el maridaje.
+  await page.getByRole("button", { name: "Pedir cambios" }).click();
+  const changes = page.getByRole("dialog", { name: "Pedir cambios a la bodega" });
+  await changes.getByLabel("Mensaje para la bodega").fill("Falta el maridaje para la ficha.");
+  await changes.getByRole("checkbox", { name: "Maridaje" }).click();
+  await changes.getByRole("button", { name: "Pedir cambios" }).click();
+  await expect(page.getByText("Espera a que la bodega la corrija y la reenvíe desde el ERP.")).toBeVisible();
+
+  // La bodega atiende lo pedido y reenvía desde el ERP (simulado por los mocks).
+  await resubmitAsWinery(page, requestId);
+  await page.getByRole("navigation", { name: "Ruta" }).getByRole("link", { name: "Tokenización" }).click();
+  await page.getByRole("searchbox", { name: "Buscar" }).fill("molino");
+  await expect(page).toHaveURL(/q=molino$/);
+  const resubmitted = row(page, "Singani El Molino 2026");
+  await expect(resubmitted).toContainText("Enviada");
+  await expect(resubmitted).toContainText("Sin asignar");
+
+  // Vuelve a la bandeja sin asignar: se toma otra vez y trae lo que completó la bodega.
+  await resubmitted.getByRole("button", { name: /Tomar/ }).click();
+  await expect(h1(page, "Singani El Molino 2026")).toBeVisible();
+  await settled(page);
+  await expect(page.getByLabel("Maridaje")).toHaveValue(/\S/);
+  const asked = page.getByRole("list", { name: "Cambios pedidos" });
+  await expect(asked).toContainText("Falta el maridaje para la ficha.");
+  await expect(asked).toContainText("resuelto el");
+  await expect(page.getByRole("list", { name: "Historial de la solicitud" })).toContainText("Cambios pedidos");
+
+  // Aprobar con «publicar al emitir»: al confirmarse la emisión, la colección sale publicada sola.
+  await page.getByRole("button", { name: "Aprobar y emitir" }).click();
+  const approve = page.getByRole("dialog", { name: "Aprobar y emitir los NFT" });
+  await approve.getByRole("checkbox", { name: "Publicar al emitir" }).click();
+  await approve.getByRole("button", { name: "Aprobar y emitir" }).click();
+  await page.getByRole("link", { name: "Seguir la emisión en la colección" }).click();
+  await expect(page.getByText("Emitiendo", { exact: true }).first()).toBeVisible();
+  await settleChain(page);
+  await expect(page.getByText("Publicada", { exact: true }).first()).toBeVisible({ timeout: 20_000 });
+  await expect(page.getByText("Preventa", { exact: true }).first()).toBeVisible();
+  // La tabla de transacciones se pone al día con la emisión: nada queda «En cola».
+  const txs = page.getByRole("table", { name: "Transacciones de la colección" });
+  await expect(txs).toContainText("Confirmada");
+  await expect(txs).not.toContainText("En cola");
+  await capture(page, "07-coleccion-emisiones");
+  expect(errors).toEqual([]);
+});
+
+test("faltante con vendidos: tras decidir, cada NFT vendido sin botella se resuelve a mano", async ({ page }) => {
+  test.slow();
+  const errors = trackErrors(page);
+  await useScenario(page, "faltante-vendidos");
+  await login(page, STAFF.admin);
+  await nav(page, "Colecciones");
+  await page
+    .getByRole("alert")
+    .getByRole("link", { name: /Faltan 20 botellas/ })
+    .click();
+  const heading = page.getByRole("heading", { name: /Cierre del lote/, level: 2 });
+  await expect(heading).toContainText("Faltante sin decidir");
+  await expect(
+    page.getByText(/Faltan 20 botellas: 10 NFT sin vender se queman y 10 vendidos quedan sin botella/),
+  ).toBeVisible();
+  // Antes de decidir no se resuelve nada.
+  await expect(page.getByRole("button", { name: /^Resolver/ })).toHaveCount(0);
+
+  await page.getByRole("button", { name: "Decidir el cierre y quemar" }).click();
+  const decide = page.getByRole("dialog", { name: "Decidir el cierre del lote" });
+  await decide.getByLabel("Motivo").fill("Embotellado con merma");
+  await decide.getByLabel(/Escribe 10/).fill("10");
+  await decide.getByRole("button", { name: "Decidir y quemar 10 NFT" }).click();
+  await expect(decide).toHaveCount(0);
+  await settleChain(page);
+  const affected = page.getByRole("table", { name: "NFT afectados por el cierre" });
+  await expect(affected.getByRole("row").filter({ hasText: "Confirmada" })).toHaveCount(10, { timeout: 20_000 });
+  // Quedan los 10 vendidos, con su pedido, pendientes de resolver: el cierre sigue en curso.
+  const resolveButtons = page.getByRole("button", { name: /^Resolver/ });
+  await expect(resolveButtons).toHaveCount(10);
+  await expect(affected).toContainText("Pagado el");
+  await expect(heading).toContainText("Decidido, en curso");
+  await capture(page, "25-cierre-vendidos-sin-botella");
+
+  // Devolución del primero, con nota.
+  await resolveButtons.first().click();
+  const resolve = page.getByRole("dialog", { name: /Resolver la botella/ });
+  await resolve.getByRole("button", { name: "Registrar la resolución" }).click();
+  await expect(resolve.getByText(/Explica qué se hizo/)).toBeVisible();
+  await resolve.getByLabel("Nota").fill("Importe devuelto por transferencia.");
+  await settled(page);
+  expect(await axe(page), "resolver un ítem").toEqual([]);
+  await capture(page, "26-resolver-item");
+  await resolve.getByRole("button", { name: "Registrar la resolución" }).click();
+  await expect(resolve).toHaveCount(0);
+  await expect(affected).toContainText("Devolución");
+  await expect(affected).toContainText("Importe devuelto por transferencia.");
+  await expect(resolveButtons).toHaveCount(9);
+
+  // Sustitución del resto; con el último, el cierre queda resuelto.
+  for (let left = 9; left > 0; left--) {
+    await resolveButtons.first().click();
+    await choose(page, "Resolución", "Sustitución por otra botella");
+    await resolve.getByLabel("Nota").fill("Botella de otra añada acordada con el comprador.");
+    await resolve.getByRole("button", { name: "Registrar la resolución" }).click();
+    await expect(resolve).toHaveCount(0);
+    await expect(resolveButtons).toHaveCount(left - 1);
+  }
+  await expect(heading).toContainText("Resuelto");
+  await expect(affected.getByRole("row").filter({ hasText: "Sustitución" })).toHaveCount(9);
+  await settled(page);
+  expect(await axe(page), "cierre con vendidos resuelto").toEqual([]);
+  expect(errors).toEqual([]);
+});
+
+test("cadena sin configurar: la ficha de la bodega lo avisa y el 409 se explica", async ({ page }) => {
+  // Reaprovisionar responde 409 `CHN_DISABLED`: es lo esperado.
+  const errors = trackErrors(page, [/^409 \/api\/v1\/platform\/wineries\/[\w-]+\/chain\/provision$/]);
+  await useScenario(page, "cadena-sin-configurar");
+  await login(page, STAFF.admin);
+  await nav(page, "Bodegas");
+  await page.getByRole("link", { name: "Bodega Altos de Calamuchita", exact: true }).click();
+  await page.getByRole("tab", { name: "Cadena" }).click();
+  const chain = page.getByRole("tabpanel", { name: "Cadena" });
+  await expect(chain.getByRole("heading", { name: /Identidad en la red/, level: 2 })).toContainText("Sin aprovisionar");
+  const notice = chain.getByRole("alert").filter({ hasText: "La cadena no está configurada en este entorno" });
+  await expect(notice).toContainText("no se puede aprovisionar la identidad de ninguna bodega");
+  await settled(page);
+  expect(await axe(page), "cadena sin configurar").toEqual([]);
+  await capture(page, "27-cadena-sin-configurar");
+
+  await chain.getByRole("button", { name: "Reaprovisionar" }).click();
+  const dialog = page.getByRole("alertdialog", { name: "Reaprovisionar la identidad" });
+  await dialog.getByLabel("Motivo").fill("Primer aprovisionamiento");
+  await dialog.getByRole("button", { name: "Reaprovisionar" }).click();
+  await expect(dialog).toContainText("La cadena no está configurada en este entorno");
+  await page.keyboard.press("Escape");
+  await expect(dialog).toHaveCount(0);
+  await expect(chain.getByRole("heading", { name: /Identidad en la red/, level: 2 })).toContainText("Sin aprovisionar");
+  expect(errors).toEqual([]);
+});
+
 test("soporte lee la tokenización y la cadena, sin ningún control de escritura", async ({ page }) => {
+  // Recorre seis pantallas con recarga: margen para máquinas lentas.
+  test.slow();
   const errors = trackErrors(page);
   // Nada de lo que hace soporte escribe: solo peticiones GET a las rutas de la Ola 3.
   const writes: string[] = [];

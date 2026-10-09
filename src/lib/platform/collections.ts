@@ -127,18 +127,19 @@ export function useCollection(id: string) {
   });
 }
 
-export function useCollectionTokens(id: string, params: TokenFilters & PageParams, enabled = true) {
+/** `stamp` (`collectionStamp`): al cambiar lo confirmado en la red, la lista se vuelve a pedir. */
+export function useCollectionTokens(id: string, params: TokenFilters & PageParams, stamp: string, enabled = true) {
   return useQuery({
-    queryKey: [...keys.collectionParts(id), "tokens", params],
+    queryKey: [...keys.collectionParts(id), "tokens", params, stamp],
     queryFn: ({ signal }) => fetchCollectionTokens(id, params, signal),
     placeholderData: keepPreviousData,
     enabled,
   });
 }
 
-export function useCollectionTransactions(id: string, params: PageParams, enabled = true) {
+export function useCollectionTransactions(id: string, params: PageParams, stamp: string, enabled = true) {
   return useQuery({
-    queryKey: [...keys.collectionParts(id), "transactions", params],
+    queryKey: [...keys.collectionParts(id), "transactions", params, stamp],
     queryFn: ({ signal }) => fetchCollectionTransactions(id, params, signal),
     placeholderData: keepPreviousData,
     refetchInterval: (query) => pollWhile(Boolean(query.state.data?.items.some((t) => isTxInProgress(t.status)))),

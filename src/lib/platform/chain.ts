@@ -6,6 +6,7 @@ import {
   ChainEventSchema,
   ChainTransactionSchema,
   PlatformChainAccountsSchema,
+  PublicChainRegistrySchema,
   ReconciliationRunDetailSchema,
   ReconciliationRunSchema,
   WineryChainAccountViewSchema,
@@ -21,6 +22,7 @@ import { runIdempotent, useIdempotency } from "@/lib/api/idempotency";
 import { pollWhile } from "./collections-utils";
 import {
   anyTxInProgress,
+  chainConfigured,
   identityInProgress,
   type AlertFilters,
   type EventFilters,
@@ -63,6 +65,13 @@ export const abandonChainTransaction = (txId: string, reason: string) =>
 /** `GET /v1/platform/chain/accounts`: cuentas de operaciones y anclaje con su saldo. */
 export const fetchChainAccounts = (signal?: AbortSignal) =>
   api(`${base}/accounts`, { schema: PlatformChainAccountsSchema, signal });
+
+/**
+ * `GET /v1/public/chain/registry` (público): con la cadena sin configurar sale con las cuentas de la
+ * plataforma en `null` y sin bodegas; es la única señal de ello antes de intentar una escritura.
+ */
+export const fetchChainRegistry = (signal?: AbortSignal) =>
+  api("/v1/public/chain/registry", { schema: PublicChainRegistrySchema, auth: false, signal });
 
 /** `GET /v1/platform/chain/events?contract=&type=&txHash=&unmatched=&from=&to=`. */
 export async function fetchChainEvents(params: EventFilters & PageParams, signal?: AbortSignal) {
@@ -144,6 +153,17 @@ export function useChainTransaction(txId: string | null) {
 
 export function useChainAccounts(enabled = true) {
   return useQuery({ queryKey: keys.chainAccounts, queryFn: ({ signal }) => fetchChainAccounts(signal), enabled });
+}
+
+/** ¿La cadena está configurada en este entorno? (`undefined` mientras carga o si no se pudo saber). */
+export function useChainConfigured(enabled = true): boolean | undefined {
+  const registry = useQuery({
+    queryKey: [...keys.chain, "registry"],
+    queryFn: ({ signal }) => fetchChainRegistry(signal),
+    staleTime: 60_000,
+    enabled,
+  });
+  return registry.data ? chainConfigured(registry.data) : undefined;
 }
 
 export function useChainEvents(params: EventFilters & PageParams, enabled = true) {

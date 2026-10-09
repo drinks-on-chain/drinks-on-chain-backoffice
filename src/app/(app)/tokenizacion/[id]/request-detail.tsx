@@ -140,6 +140,8 @@ function RequestBody({ request: r }: { request: PlatformTokenizationRequest }) {
   const [errors, setErrors] = useState<Partial<Record<CommercialField, string>>>({});
   const [saveError, setSaveError] = useState<ExplainedError | null>(null);
   const dirty = commercialChanged(form, baseline);
+  // Ampliación de cuota: los datos comerciales y el precio son los de la colección que ya existe.
+  const increase = r.kind === "QUOTA_INCREASE";
   const review = r.review;
   const identity = review.chainIdentity;
   const hint = requestHint(r.status);
@@ -181,6 +183,10 @@ function RequestBody({ request: r }: { request: PlatformTokenizationRequest }) {
 
   /** Antes de abrir «Aprobar»: lo obligatorio (nombre, descripción y portada) se valida aquí. */
   function onApprove() {
+    if (increase) {
+      setDialog("approve");
+      return;
+    }
     const problems = validateCommercial(form, { strict: true });
     setErrors(problems);
     setSaveError(null);
@@ -284,12 +290,25 @@ function RequestBody({ request: r }: { request: PlatformTokenizationRequest }) {
             <SectionHeader
               title="Datos comerciales y precio"
               description={
-                actions.review
-                  ? "Lo que verá el comprador. Obligatorios para aprobar: nombre, descripción y una imagen de portada; el precio puede quedar vacío."
-                  : "Lo que envió la bodega y completó operaciones."
+                increase
+                  ? "Una ampliación no los cambia: son los de la colección."
+                  : actions.review
+                    ? "Lo que verá el comprador. Obligatorios para aprobar: nombre, descripción y una imagen de portada; el precio puede quedar vacío."
+                    : "Lo que envió la bodega y completó operaciones."
               }
             />
-            {actions.review ? (
+            {increase ? (
+              <p className="text-fg-muted">
+                Los NFT adicionales se suman a la colección del lote, con sus mismos datos y su mismo precio.{" "}
+                {r.review.otherCollectionsOfWinery.length > 0 || r.collectionId ? (
+                  <TextLink asChild variant="inline">
+                    <Link href={`/colecciones?bodega=${r.wineryId}&q=${encodeURIComponent(r.lot.reference)}`}>
+                      Ver la colección del lote
+                    </Link>
+                  </TextLink>
+                ) : null}
+              </p>
+            ) : actions.review ? (
               <>
                 {saveError && Object.keys(saveError.fieldErrors).length === 0 && <RuleErrorAlert error={saveError} />}
                 <CommercialEditor

@@ -151,10 +151,9 @@ export function ApproveDialog({
     const invalid = note ? reasonProblem(note) : undefined;
     setReasonError(invalid);
     if (invalid) return;
+    // Una ampliación no toca los datos comerciales ni el precio: son los de la colección.
     const body: ApproveTokenizationRequest = {
-      commercial: commercialBody(form),
-      price,
-      ...(initial ? { publishOnMint } : {}),
+      ...(initial ? { commercial: commercialBody(form), price, publishOnMint } : {}),
       ...(note ? { reason: note } : {}),
     };
     onFieldErrors({});
@@ -216,11 +215,15 @@ export function ApproveDialog({
               ),
             },
             { term: "Red", value: networkLabel(r.review.chainIdentity.network) },
-            { term: "Colección", value: form.name.trim() || "Sin nombre" },
-            {
-              term: "Precio por botella",
-              value: price ? fmtBob(price.amountMinor) : "Sin precio («Precio por anunciar»)",
-            },
+            ...(initial
+              ? [
+                  { term: "Colección", value: form.name.trim() || "Sin nombre" },
+                  {
+                    term: "Precio por botella",
+                    value: price ? fmtBob(price.amountMinor) : "Sin precio («Precio por anunciar»)",
+                  },
+                ]
+              : []),
           ]}
         />
         {initial && (

@@ -27,7 +27,7 @@ import { RuleErrorAlert } from "@/components/rule-error-alert";
 import { SectionHeader } from "@/components/section-header";
 import { errorMessage } from "@/lib/api/errors";
 import { useMe } from "@/lib/auth/hooks";
-import { fmtDateTime, fmtNumber } from "@/lib/format";
+import { fmtDateTime, fmtNumber, shortHash } from "@/lib/format";
 import { closureOutcome, closureStatus, tokenStatus, unsoldPolicyLabel } from "@/lib/platform/chain-labels";
 import { useClosure, useDecideClosure, useResolveClosureItem } from "@/lib/platform/collections";
 import {
@@ -192,6 +192,25 @@ export function ClosurePanel({ collection: c }: { collection: Collection }) {
                     {i.note && <span className="text-xs text-fg-muted">{i.note}</span>}
                   </span>
                 ),
+              },
+              {
+                id: "order",
+                header: "Pedido",
+                accessor: (i) => i.paidAt ?? "",
+                hideBelow: "lg",
+                cell: (i) =>
+                  i.orderId ? (
+                    <span className="grid">
+                      <span className="font-mono text-xs">{shortHash(i.orderId, 8, 0)}</span>
+                      {i.paidAt && (
+                        <time dateTime={i.paidAt} className="text-xs text-fg-muted">
+                          Pagado el {fmtDateTime(i.paidAt)}
+                        </time>
+                      )}
+                    </span>
+                  ) : (
+                    <span className="text-fg-subtle">Sin vender</span>
+                  ),
               },
               {
                 id: "burn",

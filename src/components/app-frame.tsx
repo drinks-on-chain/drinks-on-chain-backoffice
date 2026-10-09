@@ -182,8 +182,9 @@ function Shell({ me, children }: { me: MeResponse; children: ReactNode }) {
     router.replace("/login");
   };
 
+  // Navegación y acciones van primero: Intro elige siempre la pantalla o la acción que coincide,
+  // lleguen o no (y cuando lleguen) los resultados de la búsqueda en el servidor.
   const palette: CommandPaletteGroup[] = [
-    ...search.groups,
     {
       heading: es.palette.navigation,
       items: [
@@ -284,6 +285,7 @@ function Shell({ me, children }: { me: MeResponse; children: ReactNode }) {
           : []),
       ],
     },
+    ...search.groups,
     {
       heading: es.palette.session,
       items: [

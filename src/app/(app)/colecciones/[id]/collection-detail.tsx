@@ -49,7 +49,9 @@ import {
   TOKEN_PARAMS,
   collectionActions,
   collectionInProgress,
+  collectionStamp,
   failedMintTx,
+  heldMintTx,
   mintRangeLabel,
   mintedPercent,
   type CollectionAction,
@@ -121,6 +123,7 @@ export function CollectionDetail({ id }: { id: string }) {
   const { actions, edit } = collectionActions(c.status, manage);
   const failed = failedMintTx(c);
   const inProgress = collectionInProgress(c);
+  const held = heldMintTx(c);
   const closure = c.closure;
   const open = (action: CollectionAction) => setDialog({ kind: "action", action });
 
@@ -218,7 +221,12 @@ export function CollectionDetail({ id }: { id: string }) {
           Los NFT no existen hasta que se confirme: la colección no se puede publicar.
         </Alert>
       )}
-      {inProgress && !failed && (
+      {held && !failed && (
+        <Alert tone="warning" title="La emisión está en espera">
+          {txErrorHelp(held.lastError?.code)} No hay nada que reintentar.
+        </Alert>
+      )}
+      {inProgress && !failed && !held && (
         <Alert tone="info" title="Hay una operación en curso en la red">
           Esta pantalla se actualiza sola cada pocos segundos hasta que la red confirme.
         </Alert>
@@ -459,7 +467,7 @@ function SummaryTab({ collection: c }: { collection: Collection }) {
 
 /** Emisiones (una por solicitud aprobada) con sus transacciones, y todas las de la colección. */
 function MintsTab({ collection: c, onRetry }: { collection: Collection; onRetry?: (tx: ChainTxRef) => void }) {
-  const transactions = useCollectionTransactions(c.id, { limit: 50 });
+  const transactions = useCollectionTransactions(c.id, { limit: 50 }, collectionStamp(c));
   const mints = [...c.mints].sort((a, b) => b.sequence - a.sequence);
   return (
     <div className="grid gap-5">
