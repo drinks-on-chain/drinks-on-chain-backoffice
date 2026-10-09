@@ -3,7 +3,18 @@
 import { useEffect, useMemo, useRef, type ReactNode } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Building2, ExternalLink, Inbox, KeyRound, LogOut, UserPlus, UserRound } from "lucide-react";
+import {
+  BellRing,
+  Building2,
+  ExternalLink,
+  Inbox,
+  KeyRound,
+  LogOut,
+  Scale,
+  UserPlus,
+  UserRound,
+  Wallet,
+} from "lucide-react";
 import type { MeResponse } from "@/lib/auth/schemas";
 import {
   AdminShell,
@@ -225,6 +236,31 @@ function Shell({ me, children }: { me: MeResponse; children: ReactNode }) {
               },
             ]
           : []),
+        ...(can(me, "chain.read")
+          ? [
+              {
+                id: "action:chain-alerts",
+                label: es.palette.chainAlerts,
+                icon: <BellRing aria-hidden="true" className="size-4" />,
+                keywords: ["alertas", "red", "cadena", "diferencias", "saldo bajo"],
+                onSelect: () => router.push("/cadena/alertas"),
+              },
+              {
+                id: "action:chain-accounts",
+                label: es.palette.chainAccounts,
+                icon: <Wallet aria-hidden="true" className="size-4" />,
+                keywords: ["saldos", "cuentas", "operaciones", "anclaje", "xlm"],
+                onSelect: () => router.push("/cadena/cuentas"),
+              },
+              {
+                id: "action:chain-reconciliations",
+                label: es.palette.chainReconciliations,
+                icon: <Scale aria-hidden="true" className="size-4" />,
+                keywords: ["conciliación", "conciliar", "red", "base de datos"],
+                onSelect: () => router.push("/cadena/conciliaciones"),
+              },
+            ]
+          : []),
         ...(can(me, "users.invite")
           ? [
               {
@@ -286,7 +322,7 @@ function Shell({ me, children }: { me: MeResponse; children: ReactNode }) {
           { type: "separator" },
           { label: es.auth.logout, onSelect: () => void signOut() },
         ]}
-        search={{ placeholder: "Buscar pantalla, solicitud o bodega…" }}
+        search={{ placeholder: "Buscar pantalla, solicitud, colección o bodega…" }}
         commandPalette={{
           groups: palette,
           onQueryChange: search.onQueryChange,
