@@ -97,9 +97,12 @@ Contrato: `plan/contratos/o3-tokenizacion.md` (§2.3–§2.4, §3, §5.4–§5.6
 - [x] Ficha de bodega · pestaña «Cadena»: identidad (estado, cuenta, contrato), NFT por lote, últimas transacciones; reaprovisionar, pausar y reanudar el contrato en la red con motivo y confirmación seria · 2026-10-09
 - [x] Soporte en solo lectura (los controles no aparecen; un 403 se explica); `Idempotency-Key` por intención en las diez operaciones que la exigen · 2026-10-09
 - [x] Pruebas: unitarias de los modelos (filtros ↔ URL, acciones por estado y rol, datos comerciales y precio, cierre, idempotencia, errores `TOK_…`/`CHN_…`), cliente contra los handlers reales con la red simulada (`src/lib/platform/tokenization.test.ts`) y `e2e/tokenization.spec.ts` (bandeja → pedir cambios → aprobar → emisión confirmada → publicar/pausar/reanudar; emisión fallida y reintento; faltante y decisión; alerta y resolución; cadena e identidad; soporte sin escritura; ⌘K), con axe y sin errores de consola · 2026-10-09
+- [x] `@drinks-on-chain/mocks` 0.6.0-rc.2 (`CONTRATO.md` §14): recuentos nuevos de los fixtures; `CHN_DISABLED` explicado en reaprovisionar, pausar y reanudar, y aviso de «cadena sin configurar» en la pestaña «Cadena» (registro público sin cuentas); alertas `MINT_RANGE_MISMATCH` y `ANCHOR_MISMATCH` con qué hacer; emisión en espera por `CHN_WINERY_NOT_ACTIVE`; sujetos y códigos de alerta comprobados contra `CHAIN_ALERT_SUBJECT_TYPES` y `CHAIN_ALERT_CODES` · 2026-10-09
+- [x] Las listas de transacciones y de NFT de una colección se vuelven a pedir cuando el detalle cambia (`collectionStamp`): ya no queda una emisión confirmada con su transacción «En cola» · 2026-10-09
+- [x] Una ampliación de cuota se aprueba sin datos comerciales propios (son los de la colección) · 2026-10-09
+- [x] Cierre con vendidos sin botella: pedido y pago de cada ítem y e2e de «resolver ítems» (`faltante-vendidos`); e2e del ciclo completo con `mockTokenization.resubmitAsWinery`; e2e de la cadena sin configurar; ⌘K con la navegación y las acciones antes que la búsqueda en el servidor (Intro ya no depende de cuándo llegan los resultados) · 2026-10-09
 - [ ] Contra el backend real de desarrollo (cuando despliegue la apertura de la Ola 3): cotejar rutas y formas, y añadir el recorrido a `e2e/backend-real.spec.ts`
 - [ ] `CollectionCard` a `@drinks-on-chain/ui` (hoy local en `src/components/tokenization/collection-card.tsx`)
-- [ ] Correos de la tokenización en el buzón simulado y cierre con NFT vendidos sin botella como escenario (mocks `rc.2`)
 
 ## 4F · Pedidos y reseñas (Ola 4)
 
