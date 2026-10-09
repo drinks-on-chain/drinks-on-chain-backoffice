@@ -2,8 +2,8 @@
 
 import { useState, type ReactNode } from "react";
 import { ReasonDialog, toast } from "@drinks-on-chain/ui";
-import { errorMessage } from "@/lib/api/errors";
 import { fieldErrorsFrom } from "@/lib/api/field-errors";
+import { ruleErrorMessage } from "@/lib/platform/rule-errors";
 
 export type ReasonActionCopy = {
   title: string;
@@ -17,7 +17,8 @@ export type ReasonActionCopy = {
 /**
  * Acción del back office sobre terceros con motivo obligatorio (AUD-05) que va a la bitácora.
  * Un 422 con `details[{ field: 'reason' }]` se marca en el campo; cualquier otro error (403,
- * 409 de una transición, conflicto…) se avisa dentro del diálogo, que queda abierto.
+ * 409 de una transición, conflicto…) se avisa dentro del diálogo, que queda abierto; los códigos
+ * `TOK_…` y `CHN_…` de la Ola 3, con su explicación.
  * `fieldErrors` permite marcar también los campos propios (`children`).
  */
 export function ReasonActionDialog({
@@ -52,7 +53,7 @@ export function ReasonActionDialog({
       if (reasonMessage || Object.keys(rest).length) {
         throw new Error(formErrors[0] ?? "Revisa los campos marcados.");
       }
-      throw new Error(errorMessage(error));
+      throw new Error(ruleErrorMessage(error));
     }
     toast({ title: copy.done, tone: "success" });
     onDone?.();

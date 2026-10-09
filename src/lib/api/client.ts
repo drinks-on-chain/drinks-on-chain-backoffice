@@ -28,6 +28,11 @@ export type RequestOptions<T> = {
   signal?: AbortSignal;
   /** Cabecera `Accept` (por defecto JSON; `text/csv` en las exportaciones). */
   accept?: string;
+  /**
+   * Cabecera `Idempotency-Key` (contrato de la Ola 0 §3; obligatoria en diez operaciones de la
+   * Ola 3: sin ella → 422 `IDEMPOTENCY_KEY_REQUIRED`). Ver `src/lib/api/idempotency.ts`.
+   */
+  idempotencyKey?: string;
 };
 
 /** Códigos con los que el backend da la sesión por terminada (contrato de la Ola 0 §5). */
@@ -45,6 +50,9 @@ export function setSessionEndedHandler(fn: (reason: SessionEndReason) => void) {
  */
 export const CLIENT_APP_HEADER = "X-Client-App";
 export const CLIENT_APP = "BACKOFFICE";
+
+/** Cabecera de idempotencia de las escrituras que no se pueden repetir (contrato de la Ola 0 §3). */
+export const IDEMPOTENCY_KEY_HEADER = "Idempotency-Key";
 
 /** Margen para renovar antes de que caduque el acceso. */
 const RENEW_BEFORE_MS = 30_000;
@@ -74,6 +82,7 @@ async function send(path: string, opts: RequestOptions<unknown>, token: string |
     body = JSON.stringify(opts.body);
   }
   if (token) headers.Authorization = `Bearer ${token}`;
+  if (opts.idempotencyKey) headers[IDEMPOTENCY_KEY_HEADER] = opts.idempotencyKey;
   try {
     return await fetch(buildUrl(path, opts.query), {
       method: opts.method ?? "GET",
