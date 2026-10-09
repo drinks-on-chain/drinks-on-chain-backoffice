@@ -6,7 +6,7 @@ Sub-etapas 4A–4F de `docs-front/03-roadmap-frontend.md` v3 §8, ordenadas por 
 | -------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------ |
 | 4A Acceso y tablero                    | 1        | Login con TOTP, tablero, usuarios internos por invitación con rol y matriz de permisos                             |
 | 4B Solicitudes, bodegas y equipo       | 1        | Bandeja de solicitudes, alta directa, directorio y ficha de bodega, equipo de una bodega, configuración y bitácora |
-| 4C Tokenización                        | 3        | Bandeja de solicitudes de tokenización, colecciones con estado de emisión                                          |
+| 4C Tokenización                        | 3        | Bandeja de solicitudes de tokenización, colecciones con estado de emisión, cierre con faltante y cadena            |
 | 4D Puntos de canje, soporte y campañas | 5        | Puntos de canje, cajeros, tabletas, helpdesk, entrega asistida, campañas                                           |
 | 4E Calidad                             | cada ola | Teclado completo, paginación y ordenación, Playwright del recorrido de cada hito                                   |
 | 4F Pedidos y reseñas                   | 4        | Pedidos, colecciones con ventas, moderación de reseñas                                                             |
@@ -81,9 +81,25 @@ Contrato: `plan/contratos/o2-erp-confiable.md` §14 (permisos), §17 (fila «Bac
 - [ ] Detalle del lote en solo lectura (línea de tiempo, grafo, expediente) desde la pestaña: no está en el contrato de esta ola
 - [ ] Recorrido de los lotes contra el backend real en `e2e/backend-real.spec.ts` (cuando el servidor de desarrollo despliegue el cierre H2)
 
-## 4C · Tokenización (Ola 3)
+## 4C · Tokenización, colecciones y cadena (O3-BO-1, Ola 3)
 
-- [ ] Bandeja de solicitudes de tokenización, datos comerciales, colecciones con estado de emisión y explorador
+Contrato: `plan/contratos/o3-tokenizacion.md` (§2.3–§2.4, §3, §5.4–§5.6, §6, §7, §8, §9, §10, §11) con las precisiones de `drinks-on-chain-mocks/docs/CONTRATO.md` §13. Construida **contra mocks** (`0.6.0-rc.1`); el backend de la apertura aún no está desplegado.
+
+- [x] `@drinks-on-chain/mocks` 0.6.0-rc.1 y `@drinks-on-chain/ui` 0.4.0-rc.1 (`TxStatusBadge`, `ChainAddress`, `ExplorerLink`, `StatusBadge kind="tokenizationRequest"`); fuera la bandera `NEXT_PUBLIC_FLAG_TOKENIZATION` · 2026-10-09
+- [x] Capacidades `tokenization.read`/`manage`, `chain.read`/`manage` y `chain.admin` en `can()`; menú y ⌘K con «Tokenización», «Colecciones» y «Cadena» (y búsqueda de solicitudes de tokenización y colecciones) según la capacidad · 2026-10-09
+- [x] Tablero: bloques `tokenization` (solicitudes abiertas y la más antigua, colecciones publicadas, emitiendo, emisiones fallidas, faltantes) y `chain` (alertas, transacciones fallidas y atascadas, última conciliación, saldos e indexador), con enlaces a las listas filtradas · 2026-10-09
+- [x] Bandeja `/tokenizacion` (`TokenizationInbox`): abiertas por defecto, filtros en la URL (estado, bodega, tipo, asignada, búsqueda), antigüedad resaltada, «Tomar» desde la fila · 2026-10-09
+- [x] Detalle `/tokenizacion/[id]`: revisión del lote en lectura (candados, fecha estimada, D.O., incidencias, laboratorio, expediente, límites recalculados), identidad de la bodega, notas internas, editor de datos comerciales con imágenes y portada, precio en bolivianos (`parseDecimal` → centavos) con la sugerencia de la política, pedir cambios (mensaje y campos), aprobar (con «publicar al emitir») y rechazar con `ReasonDialog`; errores `TOK_…` explicados campo a campo · 2026-10-09
+- [x] Colecciones `/colecciones` en tarjetas (`CollectionCard`) y tabla, con estado, emisión y contrato en el explorador; aviso de los cierres con faltante sin decidir · 2026-10-09
+- [x] Detalle `/colecciones/[id]`: métricas, datos comerciales, NFT paginados (estado y rango de botellas), emisiones con sus transacciones (`TxStatusBadge`, refresco cada 5 s solo con algo en curso, reintento de una emisión fallida), historial de cuota, precio y estados; publicar, pausar, reanudar, cerrar y editar datos y precio · 2026-10-09
+- [x] Cierre con faltante: cifras, NFT afectados, decisión (quemas solo `chain.admin`, con confirmación seria) y resolución ítem a ítem (devolución o sustitución) · 2026-10-09
+- [x] Cadena `/cadena`: transacciones (filtros, detalle con intentos e historial, reintentar, abandonar), cuentas de la plataforma y saldos con aviso de saldo bajo, eventos, conciliaciones (lanzar, ver con sus alertas) y alertas (resolver con nota) · 2026-10-09
+- [x] Ficha de bodega · pestaña «Cadena»: identidad (estado, cuenta, contrato), NFT por lote, últimas transacciones; reaprovisionar, pausar y reanudar el contrato en la red con motivo y confirmación seria · 2026-10-09
+- [x] Soporte en solo lectura (los controles no aparecen; un 403 se explica); `Idempotency-Key` por intención en las diez operaciones que la exigen · 2026-10-09
+- [x] Pruebas: unitarias de los modelos (filtros ↔ URL, acciones por estado y rol, datos comerciales y precio, cierre, idempotencia, errores `TOK_…`/`CHN_…`), cliente contra los handlers reales con la red simulada (`src/lib/platform/tokenization.test.ts`) y `e2e/tokenization.spec.ts` (bandeja → pedir cambios → aprobar → emisión confirmada → publicar/pausar/reanudar; emisión fallida y reintento; faltante y decisión; alerta y resolución; cadena e identidad; soporte sin escritura; ⌘K), con axe y sin errores de consola · 2026-10-09
+- [ ] Contra el backend real de desarrollo (cuando despliegue la apertura de la Ola 3): cotejar rutas y formas, y añadir el recorrido a `e2e/backend-real.spec.ts`
+- [ ] `CollectionCard` a `@drinks-on-chain/ui` (hoy local en `src/components/tokenization/collection-card.tsx`)
+- [ ] Correos de la tokenización en el buzón simulado y cierre con NFT vendidos sin botella como escenario (mocks `rc.2`)
 
 ## 4F · Pedidos y reseñas (Ola 4)
 
@@ -97,6 +113,7 @@ Contrato: `plan/contratos/o2-erp-confiable.md` §14 (permisos), §17 (fila «Bac
 
 - [x] Ola 1 · 4A: teclado completo, paginación (`limit` ≤ 100) y ordenación en la tabla de usuarios, Playwright del recorrido · 2026-09-27
 - [x] Ola 1 · 4B: filtros y página en la URL, paginación (`limit` ≤ 100) y ordenación en todas las listas; Playwright con mocks: solicitud tomar → reunión → aprobar → correo del buzón → aceptar → bodega activa con prefijo, rechazo, alta directa, suspender y verlo en la bitácora, bloquear miembro y cuenta completa, mínimo legal (rechazo y excepción), CSV, verificación de la cadena, soporte sin escritura; axe en todas las pantallas y diálogos nuevos; teclado (detalle de la bitácora, pestañas, ⌘K) · 2026-09-27
+- [x] Ola 3 · 4C: teclado completo y diálogos modales en las pantallas nuevas, filtros y página en la URL, paginación (`limit` ≤ 100), axe en las 17 rutas nuevas y en sus diálogos, Playwright del recorrido · 2026-10-09
 - [ ] Recorrido H1 con el repo `drinks-on-chain-e2e`
 
 ## Cierre de la Ola 1 (H1) · retirada de la compatibilidad transitoria

@@ -133,6 +133,24 @@ test.describe("axe sin violaciones serias", () => {
     "/bitacora",
     "/lista-de-espera",
     "/lista-de-espera?tipo=bodegas&estado=CONTACTED",
+    // Ola 3 · 4C: tokenización, colecciones y cadena.
+    "/tokenizacion",
+    "/tokenizacion?estado=APPROVED",
+    "/tokenizacion/6cdd52d3-6fa7-52a0-a209-fca325e999b6",
+    "/tokenizacion/a8494b4d-8407-5160-86be-9f6226731095",
+    "/colecciones",
+    "/colecciones?vista=tabla",
+    "/colecciones/20c275fc-7330-5935-911c-2c5800a0911a",
+    "/colecciones/20c275fc-7330-5935-911c-2c5800a0911a?pestana=nft",
+    "/colecciones/20c275fc-7330-5935-911c-2c5800a0911a?pestana=emisiones",
+    "/colecciones/20c275fc-7330-5935-911c-2c5800a0911a?pestana=historial",
+    "/colecciones/b2cae191-9e2f-5a4e-bfea-8e1ff140cdf0?pestana=cierre",
+    "/cadena",
+    "/cadena/cuentas",
+    "/cadena/eventos",
+    "/cadena/conciliaciones",
+    "/cadena/alertas?estado=todas",
+    "/bodegas/04de1441-989d-5c3e-b06f-033f3961d19d?pestana=cadena",
     "/__mocks",
   ]) {
     test(`con sesión ${path}`, async ({ page }) => {
@@ -202,7 +220,9 @@ test.describe("axe sin violaciones serias", () => {
   });
 });
 
-test("bitácora y ficha con teclado: detalle del evento, Esc devuelve el foco; pestañas con flechas", async ({ page }) => {
+test("bitácora y ficha con teclado: detalle del evento, Esc devuelve el foco; pestañas con flechas", async ({
+  page,
+}) => {
   await login(page, STAFF.admin);
   await page.goto("/bitacora");
   await settled(page);
@@ -227,4 +247,3 @@ test("bitácora y ficha con teclado: detalle del evento, Esc devuelve el foco; p
   await expect(page).toHaveURL(/pestana=equipo/);
   await expect(page.getByRole("table", { name: /Miembros de/ })).toBeVisible();
 });
-
