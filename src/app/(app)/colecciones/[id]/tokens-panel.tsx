@@ -20,7 +20,7 @@ import { errorMessage } from "@/lib/api/errors";
 import { fmtDateTime, fmtNumber } from "@/lib/format";
 import { burnReasonLabel, tokenStatus } from "@/lib/platform/chain-labels";
 import { useCollectionTokens } from "@/lib/platform/collections";
-import { TOKEN_PARAMS as P, tokenFiltersFrom } from "@/lib/platform/collections-utils";
+import { TOKEN_PARAMS as P, collectionStamp, tokenFiltersFrom } from "@/lib/platform/collections-utils";
 import { pageFrom, useUrlParams } from "@/lib/use-url-params";
 
 const PAGE_SIZE = 50;
@@ -115,7 +115,7 @@ export function TokensPanel({ collection: c }: { collection: Collection }) {
   const url = useUrlParams();
   const filters = tokenFiltersFrom(url.get);
   const { offset } = pageFrom(new URLSearchParams({ pagina: url.get(P.page) ?? "" }), PAGE_SIZE);
-  const tokens = useCollectionTokens(c.id, { ...filters, limit: PAGE_SIZE, offset });
+  const tokens = useCollectionTokens(c.id, { ...filters, limit: PAGE_SIZE, offset }, collectionStamp(c));
   const page = tokens.data;
   const [range, setRange] = useState({ from: url.get(P.from) ?? "", to: url.get(P.to) ?? "" });
   const filtered = Boolean(filters.status || filters.fromNumber || filters.toNumber);

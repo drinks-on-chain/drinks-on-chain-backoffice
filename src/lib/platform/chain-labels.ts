@@ -90,6 +90,7 @@ export const subjectTypeLabel = labelOf({
   TRANSACTION: "Transacción",
   ACCOUNT: "Cuenta",
   PLATFORM_ACCOUNT: "Cuenta de la plataforma",
+  CHAIN_EVENT: "Evento de un contrato",
 });
 
 export const signerRoleLabel = labelOf({ OPERATIONS: "Operaciones", ANCHOR: "Anclaje", WINERY: "Bodega" });
@@ -154,7 +155,8 @@ const ALERT_CODES: Record<string, string> = {
   ROLE_MISMATCH: "Roles del contrato distintos",
   QUOTA_EXCEEDED: "Cuota superada",
   BOTTLES_SHORTFALL: "Más NFT que botellas",
-  ANCHOR_MISMATCH: "Anclaje distinto del expediente",
+  ANCHOR_MISMATCH: "Anclaje que no cuadra con el expediente",
+  MINT_RANGE_MISMATCH: "Emisión confirmada con un rango que no cuadra",
   TX_STUCK: "Transacción atascada",
   LOW_BALANCE: "Saldo bajo",
   TTL_EXPIRING: "Almacenamiento por caducar",
@@ -166,6 +168,21 @@ const ALERT_CODES: Record<string, string> = {
 };
 export const alertCodeLabel = labelOf(ALERT_CODES);
 export const ALERT_CODE_OPTIONS = Object.entries(ALERT_CODES).map(([value, label]) => ({ value, label }));
+
+/** Qué hacer con cada alerta que exige una revisión a mano (las demás se explican con su mensaje). */
+const ALERT_HELP: Record<string, string> = {
+  MINT_RANGE_MISMATCH:
+    "La red confirmó la emisión, pero el rango de NFT que devolvió no coincide con el evento del contrato: la emisión queda fallida, no se crearon NFT y la colección no se publica. Revisa la transacción antes de reintentar.",
+  ANCHOR_MISMATCH:
+    "La transacción de anclaje se confirmó con un memo o una cuenta de origen inesperados: el anclaje no se da por bueno y el lote sigue certificado. Revisa la transacción y reinténtala.",
+  LOW_BALANCE: "Recarga la cuenta: con el saldo bajo el mínimo las transacciones empiezan a fallar.",
+  TX_FAILED: "Abre la transacción para ver el error de cada intento y reinténtala cuando esté resuelto.",
+  UNEXPECTED_EVENT: "Alguien operó sobre el contrato fuera del sistema: comprueba quién y revierte lo que proceda.",
+};
+export const alertHelp = (code: string | null | undefined) => (code ? (ALERT_HELP[code] ?? null) : null);
+
+/** La emisión no falló: espera en cola hasta que cambie una condición (no hay nada que reintentar). */
+export const TX_HOLD_CODES: readonly string[] = ["CHN_MINT_DISABLED", "CHN_WINERY_NOT_ACTIVE"];
 
 /** Códigos internos de `ChainTransaction.lastError` (§2.3): qué significan y qué hacer. */
 const TX_ERRORS: Record<string, string> = {
@@ -181,5 +198,7 @@ const TX_ERRORS: Record<string, string> = {
   CHN_INTENT_REJECTED: "El firmante rechazó la intención: no cuadra con la base de datos. Nunca se firmó.",
   CHN_MINT_DISABLED: "La emisión está desactivada en este entorno: espera en cola hasta que se active.",
   CHN_NETWORK_RESET: "La red se reinició: hay que reaprovisionar las identidades.",
+  CHN_WINERY_NOT_ACTIVE:
+    "La bodega está suspendida o revocada: la emisión espera en cola y continúa sola cuando se reactive.",
 };
 export const txErrorHelp = (code: string | null | undefined) => (code ? (TX_ERRORS[code] ?? null) : null);

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { PlatformAccountStatus } from "@drinks-on-chain/mocks";
-import { alertCodeLabel, collectionStatus, identityStatus, txErrorHelp, txKindLabel } from "./chain-labels";
+import { alertCodeLabel, collectionStatus, identityStatus, txErrorHelp, txKindLabel, alertHelp } from "./chain-labels";
 import {
   alertFiltersFrom,
   anyTxInProgress,
@@ -179,6 +179,8 @@ describe("alertas", () => {
     expect(subjectHref({ type: "PLATFORM_ACCOUNT", id: "anchor" }, null)).toBe("/cadena/cuentas");
     expect(subjectHref({ type: "CONTRACT", id: "x" }, "w1")).toBe("/bodegas/w1?pestana=cadena");
     expect(subjectHref({ type: "TOKEN", id: "x" }, null)).toBeNull();
+    expect(subjectHref({ type: "MINT", id: "m1" }, "w1")).toBe("/cadena?sujeto=MINT&sujetoId=m1");
+    expect(subjectHref({ type: "CHAIN_EVENT", id: "e1" }, null)).toBe("/cadena/eventos?sinOrigen=1");
   });
 
   it("la nota de resolución tiene entre 3 y 500 caracteres", () => {
@@ -198,6 +200,10 @@ describe("textos de los códigos de la Ola 3", () => {
     expect(alertCodeLabel("UNEXPECTED_EVENT")).toBe("Evento no originado por el sistema");
     expect(txErrorHelp("CHN_AUTH_FAILED")).toMatch(/reintenta a mano/);
     expect(txErrorHelp("CHN_OTRO")).toBeNull();
+    expect(txErrorHelp("CHN_WINERY_NOT_ACTIVE")).toMatch(/continúa sola cuando se reactive/);
+    expect(alertCodeLabel("MINT_RANGE_MISMATCH")).toBe("Emisión confirmada con un rango que no cuadra");
+    expect(alertHelp("ANCHOR_MISMATCH")).toMatch(/el anclaje no se da por bueno/);
+    expect(alertHelp("TTL_EXPIRING")).toBeNull();
     expect(txErrorHelp(null)).toBeNull();
   });
 });

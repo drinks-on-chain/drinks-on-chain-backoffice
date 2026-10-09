@@ -8,9 +8,11 @@ import {
   collectionActions,
   collectionFiltersFrom,
   collectionInProgress,
+  collectionStamp,
   collectionsHref,
   collectionsViewFrom,
   failedMintTx,
+  heldMintTx,
   mintInProgress,
   mintRangeLabel,
   mintedPercent,
@@ -121,6 +123,30 @@ describe("refresco cada 5 s solo mientras haya algo en curso", () => {
       closure: closure({ items: [{ burnTx: tx("SUBMITTED") }, { burnTx: null }] } as unknown as Partial<LotClosure>),
     });
     expect(collectionInProgress(burning)).toBe(true);
+  });
+
+  it("la huella de la colección cambia cuando la red confirma algo (las listas se vuelven a pedir)", () => {
+    const base = { status: "MINTING", counts: { minted: 0, burned: 0, sold: 0 }, closure: null };
+    const pending = { ...base, mints: [{ transactions: [tx("PENDING", "t1")] }] } as unknown as Collection;
+    const confirmed = {
+      ...base,
+      status: "READY",
+      counts: { minted: 400, burned: 0, sold: 0 },
+      mints: [{ transactions: [tx("CONFIRMED", "t1")] }],
+    } as unknown as Collection;
+    expect(collectionStamp(pending)).toBe(collectionStamp({ ...pending }));
+    expect(collectionStamp(confirmed)).not.toBe(collectionStamp(pending));
+  });
+
+  it("una emisión en espera (bodega suspendida o emisión desactivada) no es un fallo", () => {
+    const hold = (code: string) =>
+      ({
+        mints: [{ transactions: [{ ...tx("PENDING"), lastError: { code, message: "", retryable: false } }] }],
+      }) as never;
+    expect(heldMintTx(hold("CHN_WINERY_NOT_ACTIVE"))?.status).toBe("PENDING");
+    expect(heldMintTx(hold("CHN_MINT_DISABLED"))).not.toBeNull();
+    expect(heldMintTx(hold("CHN_RPC_UNAVAILABLE"))).toBeNull();
+    expect(heldMintTx(collection())).toBeNull();
   });
 
   it("describe el rango de botellas y de ids de una emisión", () => {

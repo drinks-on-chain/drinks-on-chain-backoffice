@@ -1,14 +1,24 @@
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { mockChain, resetErpDb, resetScenario, setScenario, setupMockServer } from "@drinks-on-chain/mocks/node";
+import {
+  mockChain,
+  mockTokenization,
+  resetErpDb,
+  resetScenario,
+  setScenario,
+  setupMockServer,
+} from "@drinks-on-chain/mocks/node";
+import { CHAIN_ALERT_CODES, CHAIN_ALERT_SUBJECT_TYPES } from "@drinks-on-chain/mocks";
 import { DEMO_PASSWORD, demoUsers, generateTotp } from "@drinks-on-chain/mocks/fixtures";
 import { api } from "@/lib/api/client";
 import { resetSessionForTests } from "@/lib/api/session";
 import { applySession, login, verifyMfa } from "@/lib/auth/api";
 import { isMfaChallenge } from "@/lib/auth/schemas";
 import { fetchDashboard, fetchPermissions } from "./api";
+import { fetchWineries } from "./wineries";
 import {
   abandonChainTransaction,
   fetchChainAccounts,
+  fetchChainRegistry,
   fetchChainAlerts,
   fetchChainEvents,
   fetchChainTransaction,
@@ -22,7 +32,8 @@ import {
   setWineryContractPaused,
   startReconciliation,
 } from "./chain";
-import { balanceWarnings, identityActions, txActions } from "./chain-utils";
+import { alertCodeLabel, subjectTypeLabel } from "./chain-labels";
+import { balanceWarnings, chainConfigured, identityActions, txActions } from "./chain-utils";
 import {
   decideClosure,
   fetchClosure,
@@ -31,10 +42,17 @@ import {
   fetchCollectionTransactions,
   fetchCollections,
   fetchLotClosures,
+  resolveClosureItem,
   runCollectionAction,
   updateCollection,
 } from "./collections";
-import { closurePolicies, collectionInProgress, mintRangeLabel } from "./collections-utils";
+import {
+  closurePolicies,
+  collectionInProgress,
+  collectionStamp,
+  mintRangeLabel,
+  pendingClosureItems,
+} from "./collections-utils";
 import { explainRuleError } from "./rule-errors";
 import {
   addTokenizationNote,
@@ -86,10 +104,11 @@ describe("tokenización, colecciones y cadena contra los handlers de los mocks",
     return found;
   };
 
-  const collectionOf = async (name: string) => {
+  // Desde los mocks 0.6.0-rc.2 dos bodegas tienen una «Singani Preventa 2026»: se busca con la bodega.
+  const collectionOf = async (name: string, winery = "Destilería Cinti Viejo") => {
     const page = await fetchCollections({ q: name, limit: 100 });
-    const found = page.items.find((c) => c.name === name || c.lot.name === name);
-    if (!found) throw new Error(`No hay colección de «${name}»`);
+    const found = page.items.find((c) => (c.name === name || c.lot.name === name) && c.winery.tradeName === winery);
+    if (!found) throw new Error(`No hay colección de «${name}» en ${winery}`);
     return found;
   };
 
@@ -111,7 +130,12 @@ describe("tokenización, colecciones y cadena contra los handlers de los mocks",
     expect(byWinery.items.every((r) => r.wineryId === open.items[0]!.wineryId)).toBe(true);
 
     const dashboard = await fetchDashboard();
-    expect(dashboard.tokenization).toMatchObject({ submitted: 1, inReview: 1, changesRequested: 1 });
+    expect(dashboard.tokenization).toMatchObject({
+      submitted: 1,
+      inReview: 1,
+      changesRequested: 1,
+      collectionsPublished: 3,
+    });
     expect(dashboard.chain.network).toBe("TESTNET");
 
     const matrix = await fetchPermissions();
@@ -414,6 +438,97 @@ describe("tokenización, colecciones y cadena contra los handlers de los mocks",
     await expect(abandonChainTransaction(identityTx.id, "No hace falta")).rejects.toMatchObject({ status: 409 });
   });
 
+  it("ciclo completo: pedir cambios → la bodega reenvía → tomar de nuevo → aprobar", async () => {
+    await signIn("operaciones");
+    const summary = await requestOf("Tannat La Angostura 2024");
+    expect(summary.status).toBe("CHANGES_REQUESTED");
+
+    // La bodega atiende lo pedido (falta la portada) y reenvía: vuelve a la bandeja sin asignar.
+    mockTokenization.resubmitAsWinery(summary.id, { message: "Portada añadida." });
+    const resubmitted = await fetchTokenizationRequest(summary.id);
+    expect(resubmitted).toMatchObject({ status: "SUBMITTED", assignee: null });
+    expect(resubmitted.changeRequests.every((c) => c.resolvedAt !== null)).toBe(true);
+    expect(resubmitted.commercialDraft.imageKeys).toHaveLength(1);
+
+    await takeTokenizationRequest(summary.id);
+    const approval = await approveTokenizationRequest(summary.id, { publishOnMint: true }, key());
+    expect(approval.collection.status).toBe("MINTING");
+    // rc.2: la respuesta ya trae las transacciones de la emisión, en cola y sin hash.
+    expect(approval.mint.transactions[0]).toMatchObject({ kind: "MINT_BATCH", status: "PENDING", txHash: null });
+    const before = collectionStamp(approval.collection);
+    mockChain.settle();
+    const published = await fetchCollection(approval.collection.id);
+    expect(published).toMatchObject({ status: "PUBLISHED", mintStatus: "CONFIRMED" });
+    // La huella cambia al confirmarse: las listas de transacciones y de NFT se vuelven a pedir.
+    expect(collectionStamp(published)).not.toBe(before);
+    const txs = await fetchCollectionTransactions(published.id, { limit: 50 });
+    expect(txs.items.every((t) => t.status === "CONFIRMED")).toBe(true);
+  });
+
+  it("faltante con vendidos: tras decidir, los NFT vendidos sin botella se resuelven uno a uno", async () => {
+    setScenario("faltante-vendidos");
+    await signIn("bo_admin");
+    const closures = await fetchLotClosures({ status: "SHORTFALL_OPEN", limit: 100 });
+    const collectionId = closures.items[0]!.collectionId;
+    const open = (await fetchClosure(collectionId))!;
+    expect(open).toMatchObject({ shortfall: 20, unsoldToBurn: 10, soldWithoutBottle: 10 });
+
+    const decided = await decideClosure(
+      collectionId,
+      { unsoldPolicy: "KEEP_ON_SALE", reason: "Merma al embotellar" },
+      key(),
+    );
+    mockChain.settle();
+    const pending = pendingClosureItems((await fetchClosure(collectionId))!);
+    expect(decided.items.filter((i) => i.outcome === "BURN_UNSOLD")).toHaveLength(10);
+    expect(pending).toHaveLength(10);
+    expect(pending.every((i) => i.orderId !== null && i.paidAt !== null)).toBe(true);
+
+    await expect(
+      resolveClosureItem(collectionId, pending[0]!.tokenId, { outcome: "MANUAL_REFUND", note: "x" }),
+    ).rejects.toMatchObject({ status: 422 });
+    let closure = await resolveClosureItem(collectionId, pending[0]!.tokenId, {
+      outcome: "MANUAL_REFUND",
+      note: "Importe devuelto por transferencia.",
+    });
+    expect(closure.status).toBe("DECIDED");
+    expect(closure.items.find((i) => i.tokenId === pending[0]!.tokenId)).toMatchObject({
+      outcome: "MANUAL_REFUND",
+      note: "Importe devuelto por transferencia.",
+    });
+    for (const item of pending.slice(1)) {
+      closure = await resolveClosureItem(collectionId, item.tokenId, {
+        outcome: "MANUAL_SUBSTITUTE",
+        note: "Botella de otra añada acordada con el comprador.",
+      });
+    }
+    // Resuelto el último, el cierre queda resuelto.
+    expect(closure.status).toBe("RESOLVED");
+  });
+
+  it("cadena sin configurar: 409 CHN_DISABLED explicado y registro público sin cuentas", async () => {
+    setScenario("cadena-sin-configurar");
+    await signIn("bo_admin");
+    expect(chainConfigured(await fetchChainRegistry())).toBe(false);
+    const altosId = (await fetchWineries({ q: "Altos de Calamuchita", limit: 5 })).items[0]!.id;
+    expect((await fetchWineryChainAccount(altosId)).identity.status).toBe("NOT_PROVISIONED");
+    const disabled = await provisionWineryChain(altosId, "Primer aprovisionamiento").catch((e: unknown) => e);
+    expect(disabled).toMatchObject({ status: 409, code: "CHN_DISABLED" });
+    expect(explainRuleError(disabled).message).toMatch(/La cadena no está configurada en este entorno/);
+    const cinti = await collectionOf("Singani Gran Reserva 2026");
+    await expect(setWineryContractPaused(cinti.wineryId, true, "Incidente", key())).rejects.toMatchObject({
+      code: "CHN_DISABLED",
+    });
+  });
+
+  it("los códigos y sujetos de alerta del paquete tienen su texto", async () => {
+    for (const code of CHAIN_ALERT_CODES) expect(alertCodeLabel(code), code).not.toBe(code);
+    for (const type of CHAIN_ALERT_SUBJECT_TYPES) expect(subjectTypeLabel(type), type).not.toBe(type);
+    // Con la cadena configurada, el registro publica la cuenta de operaciones.
+    await signIn("soporte");
+    expect(chainConfigured(await fetchChainRegistry())).toBe(true);
+  });
+
   it("soporte lee todo y no escribe nada (403)", async () => {
     await signIn("soporte");
     const open = await fetchTokenizationRequests({ limit: 20 });
@@ -428,7 +543,7 @@ describe("tokenización, colecciones y cadena contra los handlers de los mocks",
     await expect(rejectTokenizationRequest(inReview.id, "No procede")).rejects.toMatchObject(denied);
 
     const collections = await fetchCollections({ limit: 20 });
-    expect(collections.total).toBe(3);
+    expect(collections.total).toBe(4);
     const ready = collections.items.find((c) => c.status === "READY")!;
     await expect(fetchCollection(ready.id)).resolves.toMatchObject({ id: ready.id });
     await expect(fetchCollectionTokens(ready.id, { limit: 5 })).resolves.toMatchObject({ total: 240 });

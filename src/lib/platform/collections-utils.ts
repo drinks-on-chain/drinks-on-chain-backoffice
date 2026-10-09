@@ -16,6 +16,7 @@ import {
   type UnsoldPolicy,
 } from "@drinks-on-chain/mocks";
 import { fmtNumber } from "@/lib/format";
+import { TX_HOLD_CODES } from "./chain-labels";
 
 // Modelos puros de las colecciones (contrato de la Ola 3 §6 y §8.4): filtros ↔ URL, acciones según
 // el estado y los permisos, emisión en curso (refresco cada 5 s) y cierre con faltante.
@@ -113,6 +114,18 @@ export function collectionInProgress(c: Collection | undefined): boolean {
   );
 }
 
+/**
+ * Huella de lo que la red ya confirmó de una colección (estado de cada transacción de sus emisiones
+ * y de las quemas del cierre, y los recuentos). Va en la clave de las listas que dependen de ello
+ * (transacciones y NFT): cuando el detalle cambia, se vuelven a pedir en lugar de quedarse con lo
+ * de antes (p. ej. una emisión ya confirmada con su transacción aún «En cola» en la tabla).
+ */
+export function collectionStamp(c: Pick<Collection, "mints" | "closure" | "counts" | "status">): string {
+  const mints = c.mints.flatMap((m) => m.transactions.map((t) => `${t.id}:${t.status}`));
+  const burns = (c.closure?.items ?? []).map((i) => `${i.tokenId}:${i.outcome}:${i.burnTx?.status ?? "-"}`);
+  return [c.status, c.counts.minted, c.counts.burned, c.counts.sold, ...mints, ...burns].join("|");
+}
+
 /** Intervalo de `refetchInterval`: 5 s mientras haya algo en curso; si no, sin consulta periódica. */
 export const POLL_MS = 5_000;
 export const pollWhile = (active: boolean): number | false => (active ? POLL_MS : false);
@@ -127,6 +140,15 @@ export function mintRangeLabel(mint: Pick<Mint, "ranges">): string | null {
 
 export const failedMintTx = (c: Pick<Collection, "mints">) =>
   c.mints.flatMap((m) => m.transactions).find((t) => t.status === "FAILED") ?? null;
+
+/**
+ * Emisión que no falló pero espera en cola (`CHN_MINT_DISABLED`: emisión desactivada en el entorno;
+ * `CHN_WINERY_NOT_ACTIVE`: bodega suspendida o revocada). Continúa sola cuando cambie la condición.
+ */
+export const heldMintTx = (c: Pick<Collection, "mints">) =>
+  c.mints
+    .flatMap((m) => m.transactions)
+    .find((t) => t.status === "PENDING" && TX_HOLD_CODES.includes(t.lastError?.code ?? "")) ?? null;
 
 // ---------------------------------------------------------------------------
 // Acciones de la colección (§6.4)

@@ -26,7 +26,7 @@ import { errorMessage } from "@/lib/api/errors";
 import { useMe } from "@/lib/auth/hooks";
 import { fmtDateTime, fmtNumber, fmtRelative } from "@/lib/format";
 import { useChainAlerts, useResolveChainAlert } from "@/lib/platform/chain";
-import { ALERT_CODE_OPTIONS, alertCodeLabel } from "@/lib/platform/chain-labels";
+import { ALERT_CODE_OPTIONS, alertCodeLabel, alertHelp } from "@/lib/platform/chain-labels";
 import { ALERT_PARAMS as P, RUN_PARAMS, alertFiltersFrom, validateResolutionNote } from "@/lib/platform/chain-utils";
 import { can } from "@/lib/platform/permissions";
 import { explainRuleError } from "@/lib/platform/rule-errors";
@@ -265,6 +265,7 @@ function AlertPanel({
           <div className="grid gap-2">
             <StatusBadge kind="alert" status={a.level} />
             <p>{a.message}</p>
+            {alertHelp(a.code) && <p className="text-fg-muted">{alertHelp(a.code)}</p>}
           </div>
           <KeyValueList
             items={[

@@ -26,7 +26,12 @@ import { SeriousReasonDialog } from "@/components/serious-reason-dialog";
 import { errorMessage } from "@/lib/api/errors";
 import { useMe } from "@/lib/auth/hooks";
 import { fmtDateTime, fmtNumber, fmtXlm } from "@/lib/format";
-import { useProvisionWineryChain, useSetWineryContractPaused, useWineryChainAccount } from "@/lib/platform/chain";
+import {
+  useChainConfigured,
+  useProvisionWineryChain,
+  useSetWineryContractPaused,
+  useWineryChainAccount,
+} from "@/lib/platform/chain";
 import { collectionStatus, identityStatus, networkLabel } from "@/lib/platform/chain-labels";
 import { identityActions, identityInProgress, transactionsHref } from "@/lib/platform/chain-utils";
 import { collectionsHref } from "@/lib/platform/collections-utils";
@@ -49,6 +54,7 @@ export function ChainPanel({ winery }: { winery: WineryDetail }) {
   const account = useWineryChainAccount(winery.id);
   const [dialog, setDialog] = useState<Dialog | null>(null);
   const view = account.data;
+  const configured = useChainConfigured(Boolean(view));
 
   if (account.isPending) return <SkeletonText lines={8} />;
   if (account.isError || !view) {
@@ -115,7 +121,13 @@ export function ChainPanel({ winery }: { winery: WineryDetail }) {
           solo de administración.
         </Alert>
       )}
-      {identity.status === "NOT_PROVISIONED" && (
+      {configured === false && (
+        <Alert tone="warning" title="La cadena no está configurada en este entorno">
+          Faltan las cuentas de la plataforma o el código del contrato en el servidor: mientras tanto no se puede
+          aprovisionar la identidad de ninguna bodega ni pausar o reanudar contratos, y no se aprueban tokenizaciones.
+        </Alert>
+      )}
+      {identity.status === "NOT_PROVISIONED" && configured !== false && (
         <Alert tone="info" title="Sin identidad en la red">
           {winery.status === "ACTIVE"
             ? "La bodega está activa pero aún no tiene cuenta ni contrato: sin ellos no se aprueba ninguna tokenización."
