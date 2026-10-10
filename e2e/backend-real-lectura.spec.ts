@@ -166,7 +166,8 @@ test("Ola 3 en solo lectura: las respuestas reales pasan los esquemas y nada rev
   ] as const) {
     await page.goto(path);
     await healthy(page, path);
-    await expect(page.getByRole("heading", { name: heading, level: 2 })).toBeVisible();
+    // Exacto: el estado vacío trae su propio encabezado («Aún no hay transacciones»).
+    await expect(page.getByRole("heading", { name: heading, level: 2, exact: true })).toBeVisible();
   }
 
   // Pestaña «Cadena» de la primera bodega activa (sin tocarla).
