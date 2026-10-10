@@ -101,7 +101,9 @@ Contrato: `plan/contratos/o3-tokenizacion.md` (§2.3–§2.4, §3, §5.4–§5.6
 - [x] Las listas de transacciones y de NFT de una colección se vuelven a pedir cuando el detalle cambia (`collectionStamp`): ya no queda una emisión confirmada con su transacción «En cola» · 2026-10-09
 - [x] Una ampliación de cuota se aprueba sin datos comerciales propios (son los de la colección) · 2026-10-09
 - [x] Cierre con vendidos sin botella: pedido y pago de cada ítem y e2e de «resolver ítems» (`faltante-vendidos`); e2e del ciclo completo con `mockTokenization.resubmitAsWinery`; e2e de la cadena sin configurar; ⌘K con la navegación y las acciones antes que la búsqueda en el servidor (Intro ya no depende de cuándo llegan los resultados) · 2026-10-09
-- [ ] Contra el backend real de desarrollo (cuando despliegue la apertura de la Ola 3): cotejar rutas y formas, y añadir el recorrido a `e2e/backend-real.spec.ts`
+- [x] `@drinks-on-chain/mocks` 0.6.0-rc.3 (OpenAPI del backend desplegado, `CONTRATO.md` §15): sujetos de alerta `EVENT`, `NETWORK` y `CODE`; cierre sin faltante que se puede volver a decidir, ítems vendidos o reservados resolubles en cualquier estado y 409 `CONFLICT` explicado · 2026-10-10
+- [x] Cotejo de solo lectura contra el backend real (`e2e/backend-real-lectura.spec.ts`; `spec=backend-real-lectura` en el job manual `e2e-backend-real`): cada respuesta real de la Ola 3 se valida contra los esquemas y las pantallas se pintan con listas vacías y la cadena sin configurar · 2026-10-10
+- [ ] Recorrido de escritura de la Ola 3 contra el backend real (aprobar, emitir, publicar): cuando la cadena esté configurada en desarrollo: cotejar rutas y formas, y añadir el recorrido a `e2e/backend-real.spec.ts`
 - [ ] `CollectionCard` a `@drinks-on-chain/ui` (hoy local en `src/components/tokenization/collection-card.tsx`)
 
 ## 4F · Pedidos y reseñas (Ola 4)
