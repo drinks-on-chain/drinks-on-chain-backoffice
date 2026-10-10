@@ -93,6 +93,8 @@ describe("errores TOK_… y CHN_… explicados", () => {
     expect(text("CHN_ALERT_ALREADY_RESOLVED")).toMatch(/ya estaba resuelta/);
     expect(text("TOK_WINERY_NOT_ACTIVE")).toMatch(/suspendida o revocada/);
     expect(text("CHN_DISABLED")).toMatch(/La cadena no está configurada en este entorno/);
+    // Decidir dos veces o resolver un ítem ya resuelto (backend desplegado).
+    expect(text("CONFLICT")).toMatch(/Ya estaba hecho/);
   });
 
   it("un 422 genérico marca sus campos y lo demás va a las notas", () => {

@@ -32,6 +32,7 @@ import { closureOutcome, closureStatus, tokenStatus, unsoldPolicyLabel } from "@
 import { useClosure, useDecideClosure, useResolveClosureItem } from "@/lib/platform/collections";
 import {
   closureBlockedReason,
+  closureItemResolvable,
   closureNeedsDecision,
   closurePolicies,
   shortfallSummary,
@@ -96,7 +97,7 @@ export function ClosurePanel({ collection: c }: { collection: Collection }) {
         </div>
         {policies.length > 0 && (
           <Button variant={k.shortfall > 0 ? "destructive" : "primary"} onClick={() => setDeciding(true)}>
-            {k.shortfall > 0 ? "Decidir el cierre y quemar" : "Decidir el cierre"}
+            {k.shortfall > 0 ? "Decidir el cierre y quemar" : k.decision ? "Cambiar la decisión" : "Decidir el cierre"}
           </Button>
         )}
       </div>
@@ -155,7 +156,7 @@ export function ClosurePanel({ collection: c }: { collection: Collection }) {
             data={k.items}
             getRowId={(i) => String(i.tokenId)}
             rowActions={(i) =>
-              perms.manage && i.outcome === "PENDING" && k.status !== "SHORTFALL_OPEN" ? (
+              perms.manage && closureItemResolvable(i) ? (
                 <Button size="sm" variant="secondary" onClick={() => setResolving(i)}>
                   Resolver<span className="sr-only"> la botella {i.bottleNumber}</span>
                 </Button>

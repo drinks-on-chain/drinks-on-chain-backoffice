@@ -187,8 +187,12 @@ export function subjectHref(subject: { type: string; id: string }, wineryId: str
       return transactionsHref({ open: subject.id });
     case "MINT":
       return `/cadena?${TX_PARAMS.subjectType}=MINT&${TX_PARAMS.subjectId}=${encodeURIComponent(subject.id)}`;
-    case "CHAIN_EVENT":
+    case "EVENT":
       return "/cadena/eventos?sinOrigen=1";
+    case "CODE":
+      return "/cadena/cuentas";
+    case "NETWORK":
+      return "/cadena/conciliaciones";
     case "ACCOUNT":
     case "PLATFORM_ACCOUNT":
     case "PLATFORM":

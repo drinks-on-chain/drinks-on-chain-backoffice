@@ -3,6 +3,7 @@ import type { ChainTxRef, Collection, LotClosure } from "@drinks-on-chain/mocks"
 import {
   POLL_MS,
   closureBlockedReason,
+  closureItemResolvable,
   closureNeedsDecision,
   closurePolicies,
   collectionActions,
@@ -226,7 +227,18 @@ describe("cierre con faltante", () => {
       expect(closurePolicies(done, admin)).toEqual([]);
       expect(closureBlockedReason(done, operations)).toBeNull();
     }
-    expect(closureNeedsDecision(closure({ status: "NO_SHORTFALL", shortfall: 0, decision }))).toBe(false);
+    // Sin faltante, decidir «siguen a la venta» lo deja `NO_SHORTFALL` con su decisión: se puede cambiar.
+    expect(closureNeedsDecision(closure({ status: "NO_SHORTFALL", shortfall: 0, decision }))).toBe(true);
+  });
+
+  it("un ítem vendido o reservado y pendiente se resuelve en cualquier estado del cierre", () => {
+    expect(closureItemResolvable({ outcome: "PENDING", status: "SOLD" })).toBe(true);
+    expect(closureItemResolvable({ outcome: "PENDING", status: "RESERVED" })).toBe(true);
+    expect(closureItemResolvable({ outcome: "PENDING", status: "REDEEMABLE" })).toBe(true);
+    // Sin vender (se quema al decidir) o ya resuelto: 409 `CONFLICT`.
+    expect(closureItemResolvable({ outcome: "PENDING", status: "MINTED" })).toBe(false);
+    expect(closureItemResolvable({ outcome: "MANUAL_REFUND", status: "SOLD" })).toBe(false);
+    expect(closureItemResolvable({ outcome: "BURN_UNSOLD", status: "BURNED" })).toBe(false);
   });
 
   it("resume el faltante y lista los ítems por resolver a mano", () => {
@@ -234,7 +246,12 @@ describe("cierre con faltante", () => {
       "Faltan 20 botellas: 20 NFT sin vender se queman y 0 vendidos quedan sin botella (devolución o sustitución a mano).",
     );
     expect(shortfallSummary(closure({ shortfall: 0 }))).toMatch(/no hay faltante/);
-    const items = [{ outcome: "PENDING" }, { outcome: "BURN_UNSOLD" }, { outcome: "MANUAL_REFUND" }];
+    const items = [
+      { outcome: "PENDING", status: "SOLD" },
+      { outcome: "PENDING", status: "MINTED" },
+      { outcome: "BURN_UNSOLD", status: "BURNED" },
+      { outcome: "MANUAL_REFUND", status: "SOLD" },
+    ];
     expect(pendingClosureItems({ items } as unknown as LotClosure)).toHaveLength(1);
   });
 });

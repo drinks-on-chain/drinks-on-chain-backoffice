@@ -187,9 +187,19 @@ export const mintedPercent = (c: Pick<CollectionSummary, "quota" | "counts">) =>
 
 type ClosureLike = Pick<LotClosure, "status" | "shortfall" | "decision">;
 
-/** El cierre espera una decisión: con faltante abierto, o sin faltante y sin decidir todavía. */
-export const closureNeedsDecision = (c: ClosureLike) =>
-  c.status === "SHORTFALL_OPEN" || (c.status === "NO_SHORTFALL" && c.decision === null);
+/**
+ * El cierre admite una decisión: con faltante abierto, o sin faltante (decidir «siguen a la venta»
+ * lo deja `NO_SHORTFALL` con su `decision`, y se puede volver a decidir). Ya `DECIDED` o `RESOLVED`,
+ * no (409 `CONFLICT`).
+ */
+export const closureNeedsDecision = (c: ClosureLike) => c.status === "SHORTFALL_OPEN" || c.status === "NO_SHORTFALL";
+
+/**
+ * Un ítem se resuelve a mano (devolución o sustitución) si su NFT está vendido o reservado y sigue
+ * pendiente, en cualquier estado del cierre; uno sin vender o ya resuelto da 409 `CONFLICT`.
+ */
+export const closureItemResolvable = (item: { outcome: string; status: string }) =>
+  item.outcome === "PENDING" && item.status !== "MINTED" && item.status !== "BURNED";
 
 /**
  * Qué políticas puede decidir cada rol (§10): toda decisión con faltante y toda quema (`BURN`) es
@@ -211,7 +221,7 @@ export function closureBlockedReason(c: ClosureLike, perms: { manage: boolean; a
 }
 
 /** Ítems que operaciones resuelve a mano: NFT vendidos sin botella aún pendientes (A-30). */
-export const pendingClosureItems = (c: Pick<LotClosure, "items">) => c.items.filter((i) => i.outcome === "PENDING");
+export const pendingClosureItems = (c: Pick<LotClosure, "items">) => c.items.filter(closureItemResolvable);
 
 /** «Faltan 20 botellas: 20 NFT sin vender se queman y 0 vendidos quedan sin botella». */
 export function shortfallSummary(c: Pick<LotClosure, "shortfall" | "unsoldToBurn" | "soldWithoutBottle">): string {
