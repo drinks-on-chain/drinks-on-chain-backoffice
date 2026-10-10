@@ -125,13 +125,13 @@ test("Ola 3 en solo lectura: las respuestas reales pasan los esquemas y nada rev
   await expect(board.getByText("Alertas de la cadena", { exact: true })).toBeVisible();
   await expect(board.getByText(/Saldo de operaciones/)).toBeVisible();
 
-  // Bandeja (y la primera solicitud, si hay alguna).
+  // Bandeja (y la primera solicitud, si hay alguna: con la lista vacía, el enlace del estado vacío no cuenta).
   await page.goto("/tokenizacion");
   await healthy(page, "bandeja");
   await expect(page.getByText(/^\d+ solicitud(es)?$/)).toBeVisible();
   await page.goto("/tokenizacion?estado=APPROVED");
   await healthy(page, "bandeja (aprobadas)");
-  const request = page.getByRole("table").getByRole("link").first();
+  const request = page.locator('table a[href^="/tokenizacion/"]').first();
   if (await request.count()) {
     await request.click();
     await expect(page).toHaveURL(/\/tokenizacion\/[\w-]+$/);
@@ -145,7 +145,7 @@ test("Ola 3 en solo lectura: las respuestas reales pasan los esquemas y nada rev
   await expect(page.getByText(/^\d+ (colección|colecciones)$/)).toBeVisible();
   await page.goto("/colecciones?vista=tabla");
   await healthy(page, "colecciones (tabla)");
-  const collection = page.getByRole("table").getByRole("link").first();
+  const collection = page.locator('table a[href^="/colecciones/"]').first();
   if (await collection.count()) {
     await collection.click();
     await expect(page).toHaveURL(/\/colecciones\/[\w-]+$/);
@@ -172,7 +172,7 @@ test("Ola 3 en solo lectura: las respuestas reales pasan los esquemas y nada rev
   // Pestaña «Cadena» de la primera bodega activa (sin tocarla).
   await page.goto("/bodegas?estado=ACTIVE");
   await healthy(page, "bodegas");
-  const winery = page.getByRole("table").getByRole("link").first();
+  const winery = page.locator('table a[href^="/bodegas/"]').first();
   if (await winery.count()) {
     await winery.click();
     await expect(page).toHaveURL(/\/bodegas\/[\w-]+$/);
