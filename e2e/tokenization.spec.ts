@@ -595,8 +595,9 @@ test("faltante con vendidos: tras decidir, cada NFT vendido sin botella se resue
   await expect(
     page.getByText(/Faltan 20 botellas: 10 NFT sin vender se queman y 10 vendidos quedan sin botella/),
   ).toBeVisible();
-  // Antes de decidir no se resuelve nada.
-  await expect(page.getByRole("button", { name: /^Resolver/ })).toHaveCount(0);
+  // Los 10 vendidos sin botella ya se pueden resolver (antes o después de decidir); los 10 sin
+  // vender esperan a la decisión, que los quema.
+  await expect(page.getByRole("button", { name: /^Resolver/ })).toHaveCount(10);
 
   await page.getByRole("button", { name: "Decidir el cierre y quemar" }).click();
   const decide = page.getByRole("dialog", { name: "Decidir el cierre del lote" });

@@ -12,8 +12,8 @@ const channel = process.env.CI ? undefined : "chrome";
 
 export default defineConfig({
   testDir: "./e2e",
-  testMatch: REAL ? "backend-real.spec.ts" : "*.spec.ts",
-  testIgnore: REAL ? undefined : "backend-real.spec.ts",
+  testMatch: REAL ? "backend-real*.spec.ts" : "*.spec.ts",
+  testIgnore: REAL ? undefined : "backend-real*.spec.ts",
   fullyParallel: !REAL,
   workers: REAL ? 1 : undefined,
   forbidOnly: !!process.env.CI,

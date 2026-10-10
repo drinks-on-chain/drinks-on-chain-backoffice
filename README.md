@@ -57,7 +57,7 @@ Los correos (invitaciones, recuperación) llegan al **buzón simulado** de `/__m
 
 ### Contra el backend real de desarrollo
 
-`e2e/backend-real.spec.ts` recorre el back office contra el backend de desarrollo (login con TOTP, invitar y aceptar un usuario interno con inscripción del TOTP, recuperar la contraseña por correo, rol, bloqueo y matriz, alta directa y activación, suspender/reactivar, equipo y cuenta completa, transferir la titularidad, configuración y excepción legal, bitácora con CSV y verificación, solicitudes y ⌘K). Queda fuera de `pnpm e2e` salvo con `E2E_REAL_API=1`:
+`e2e/backend-real.spec.ts` recorre el back office contra el backend de desarrollo (login con TOTP, invitar y aceptar un usuario interno con inscripción del TOTP, recuperar la contraseña por correo, rol, bloqueo y matriz, alta directa y activación, suspender/reactivar, equipo y cuenta completa, transferir la titularidad, configuración y excepción legal, bitácora con CSV y verificación, solicitudes y ⌘K). `e2e/backend-real-lectura.spec.ts` recorre en **solo lectura** las pantallas de la Ola 3 (tablero, tokenización, colecciones, cadena y la pestaña «Cadena» de una bodega) y valida cada respuesta real contra los esquemas; en el job manual `e2e-backend-real` se lanza solo con la entrada `spec=backend-real-lectura`. Quedan fuera de `pnpm e2e` salvo con `E2E_REAL_API=1`:
 
 ```bash
 # Secretos solo en el entorno (nunca como argumentos ni en archivos del repo)

@@ -90,7 +90,9 @@ export const subjectTypeLabel = labelOf({
   TRANSACTION: "Transacción",
   ACCOUNT: "Cuenta",
   PLATFORM_ACCOUNT: "Cuenta de la plataforma",
-  CHAIN_EVENT: "Evento de un contrato",
+  EVENT: "Evento de un contrato",
+  NETWORK: "Red",
+  CODE: "Código del contrato",
 });
 
 export const signerRoleLabel = labelOf({ OPERATIONS: "Operaciones", ANCHOR: "Anclaje", WINERY: "Bodega" });

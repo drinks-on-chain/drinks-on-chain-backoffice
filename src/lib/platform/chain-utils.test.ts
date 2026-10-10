@@ -180,7 +180,9 @@ describe("alertas", () => {
     expect(subjectHref({ type: "CONTRACT", id: "x" }, "w1")).toBe("/bodegas/w1?pestana=cadena");
     expect(subjectHref({ type: "TOKEN", id: "x" }, null)).toBeNull();
     expect(subjectHref({ type: "MINT", id: "m1" }, "w1")).toBe("/cadena?sujeto=MINT&sujetoId=m1");
-    expect(subjectHref({ type: "CHAIN_EVENT", id: "e1" }, null)).toBe("/cadena/eventos?sinOrigen=1");
+    expect(subjectHref({ type: "EVENT", id: "e1" }, null)).toBe("/cadena/eventos?sinOrigen=1");
+    expect(subjectHref({ type: "CODE", id: "hash" }, null)).toBe("/cadena/cuentas");
+    expect(subjectHref({ type: "NETWORK", id: "TESTNET" }, null)).toBe("/cadena/conciliaciones");
   });
 
   it("la nota de resolución tiene entre 3 y 500 caracteres", () => {
