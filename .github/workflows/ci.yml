@@ -11,6 +11,10 @@ on:
         description: Origen del backend de desarrollo
         default: https://136.243.223.39.sslip.io
         required: true
+      spec:
+        description: Recorrido contra el backend real (vacío = todos; `backend-real-lectura` = solo lectura de la Ola 3)
+        default: ""
+        required: false
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -69,8 +73,9 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm exec playwright install --with-deps chromium
-      - run: pnpm e2e
+      - run: pnpm e2e $E2E_SPEC
         env:
+          E2E_SPEC: ${{ inputs.spec }}
           E2E_REAL_API: "1"
           E2E_API_ORIGIN: ${{ inputs.api_origin }}
           E2E_PASSWORD: ${{ secrets.E2E_PASSWORD }}

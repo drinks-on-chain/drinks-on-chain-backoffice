@@ -2,19 +2,23 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Building2, Inbox, Search } from "lucide-react";
+import { Building2, Inbox, Layers, Search, Sparkles } from "lucide-react";
 import type { MeResponse } from "@/lib/auth/schemas";
 import { getStatusBadge, matchesQuery, type CommandPaletteGroup, type CommandPaletteItem } from "@drinks-on-chain/ui";
 import { useApplications } from "@/lib/platform/applications";
+import { collectionStatus, requestKindLabel } from "@/lib/platform/chain-labels";
+import { useCollections } from "@/lib/platform/collections";
 import { can } from "@/lib/platform/permissions";
+import { useTokenizationRequests } from "@/lib/platform/tokenization";
 import { useWineries } from "@/lib/platform/wineries";
 
 const MIN_QUERY = 2;
 const SEARCH = "search:";
 
 /**
- * Búsqueda en el servidor desde la paleta de comandos (⌘K): al escribir, solicitudes y bodegas que
- * coinciden ("Ir a solicitud…", "Ir a bodega…"). Los resultados no se filtran otra vez en el
+ * Búsqueda en el servidor desde la paleta de comandos (⌘K): al escribir, solicitudes de alta,
+ * bodegas, solicitudes de tokenización abiertas y colecciones que coinciden ("Ir a solicitud…",
+ * "Ir a bodega…", "Ir a colección…"). Los resultados no se filtran otra vez en el
  * cliente (ya coinciden por nombre, NIT, contacto o región).
  */
 export function usePaletteSearch(me: MeResponse) {
@@ -30,6 +34,9 @@ export function usePaletteSearch(me: MeResponse) {
   const active = debounced.length >= MIN_QUERY;
   const applications = useApplications({ q: debounced, limit: 5 }, active && can(me, "applications.read"));
   const wineries = useWineries({ q: debounced, limit: 5 }, active && can(me, "wineries.read"));
+  const tokenization = active && can(me, "tokenization.read");
+  const requests = useTokenizationRequests({ q: debounced, limit: 5 }, tokenization);
+  const collections = useCollections({ q: debounced, limit: 5 }, tokenization);
 
   const groups: CommandPaletteGroup[] = [];
   const text = query.trim();
@@ -63,12 +70,34 @@ export function usePaletteSearch(me: MeResponse) {
       onSelect: () => router.push(`/bodegas/${w.id}`),
     }));
     if (found.length) groups.push({ id: "search-wineries", heading: "Ir a bodega…", items: found });
+    const tokenRequests: CommandPaletteItem[] = (requests.data?.items ?? []).map((r) => ({
+      id: `${SEARCH}tokenization:${r.id}`,
+      label: `${r.lot.name} · ${r.winery.tradeName}`,
+      description: `${getStatusBadge("tokenizationRequest", r.status).label} · ${requestKindLabel(r.kind)} · ${r.lot.reference}`,
+      icon: icon(Sparkles),
+      onSelect: () => router.push(`/tokenizacion/${r.id}`),
+    }));
+    if (tokenRequests.length) {
+      groups.push({ id: "search-tokenization", heading: "Ir a solicitud de tokenización…", items: tokenRequests });
+    }
+    const foundCollections: CommandPaletteItem[] = (collections.data?.items ?? []).map((c) => ({
+      id: `${SEARCH}collection:${c.id}`,
+      label: c.name,
+      description: `${collectionStatus(c.status).label} · ${c.winery.tradeName} · ${c.lot.reference}`,
+      icon: icon(Layers),
+      onSelect: () => router.push(`/colecciones/${c.id}`),
+    }));
+    if (foundCollections.length) {
+      groups.push({ id: "search-collections", heading: "Ir a colección…", items: foundCollections });
+    }
   }
 
   return {
     groups,
     onQueryChange: setQuery,
-    loading: text.length >= MIN_QUERY && (!active || applications.isFetching || wineries.isFetching),
+    loading:
+      text.length >= MIN_QUERY &&
+      (!active || applications.isFetching || wineries.isFetching || requests.isFetching || collections.isFetching),
     filter: (item: CommandPaletteItem, q: string) =>
       item.id.startsWith(SEARCH) || matchesQuery(q, item.label, ...(item.keywords ?? [])),
   };

@@ -97,3 +97,51 @@ export function localInputToIso(local: string): string | null {
   const ms = new Date(local).getTime();
   return Number.isFinite(ms) ? new Date(ms).toISOString() : null;
 }
+
+// ---------------------------------------------------------------------------
+// Dinero y red (contrato de la Ola 3 §0): importes en centavos enteros de boliviano
+// (`amountMinor`), saldos de la red como cadenas en XLM con 7 decimales.
+// ---------------------------------------------------------------------------
+
+/** Centavos → "Bs 1.250,50". */
+export const fmtBob = (amountMinor: number) => `Bs ${fmtNumber(amountMinor / 100, 2)}`;
+
+/** Centavos → texto de un campo editable ("1250,50"), sin separador de miles. */
+export const minorToInput = (amountMinor: number | null | undefined) =>
+  amountMinor == null ? "" : (amountMinor / 100).toFixed(2).replace(".", ",");
+
+export type BobInput = { ok: true; amountMinor: number | null } | { ok: false; error: string };
+
+/**
+ * Importe en bolivianos escrito a mano → centavos enteros. Vacío es «sin precio» (`null`, A-32).
+ * Usa el único `parseDecimal` ("1.250" = 1250; "180,5" = 180,50) y no admite más de dos decimales
+ * ni importes menores que un centavo.
+ */
+export function parseBobToMinor(input: string): BobInput {
+  if (!input.trim()) return { ok: true, amountMinor: null };
+  const value = parseDecimal(input);
+  if (value === null) return { ok: false, error: "Escribe un importe en bolivianos, p. ej. 180 o 180,50." };
+  if (value <= 0) return { ok: false, error: "El precio debe ser mayor que cero (o déjalo vacío)." };
+  const minor = Math.round(value * 100);
+  if (Math.abs(value * 100 - minor) > 1e-6) return { ok: false, error: "Como máximo dos decimales (centavos)." };
+  if (minor < 1) return { ok: false, error: "El precio debe ser mayor que cero (o déjalo vacío)." };
+  return { ok: true, amountMinor: minor };
+}
+
+/** Saldo de la red: "9988.4321000" → "9.988,4321 XLM" (entre 2 y 7 decimales). */
+export function fmtXlm(xlm: string | null | undefined): string {
+  const n = Number(xlm);
+  if (xlm == null || xlm === "" || !Number.isFinite(n)) return "—";
+  return `${new Intl.NumberFormat(LOCALE, { minimumFractionDigits: 2, maximumFractionDigits: 7 }).format(n)} XLM`;
+}
+
+/** Antigüedad en horas → "menos de 1 h", "5 h", "1 día", "3 días". */
+export function fmtAge(hours: number): string {
+  if (!Number.isFinite(hours) || hours < 1) return "menos de 1 h";
+  if (hours < 24) return `${Math.floor(hours)} h`;
+  const days = Math.floor(hours / 24);
+  return days === 1 ? "1 día" : `${fmtNumber(days)} días`;
+}
+
+/** Horas transcurridas desde un instante (para la antigüedad de una solicitud). */
+export const hoursSince = (iso: string, now: number = Date.now()) => Math.max(0, (now - Date.parse(iso)) / 3_600_000);

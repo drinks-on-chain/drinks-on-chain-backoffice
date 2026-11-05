@@ -34,7 +34,15 @@ export type PlatformAction =
   | "audit.verify"
   // Lista de espera (contrato O1b; capacidad `waitlist`: FULL edita y exporta, READ solo consulta).
   | "waitlist.read"
-  | "waitlist.manage";
+  | "waitlist.manage"
+  // Tokenización y cadena (contrato de la Ola 3 §10; capacidades `tokenization`, `chain` y
+  // `chain.admin`): soporte lee; operaciones tramita; abandonar una transacción, pausar o reanudar
+  // un contrato en la red y decidir quemas, solo administración.
+  | "tokenization.read"
+  | "tokenization.manage"
+  | "chain.read"
+  | "chain.manage"
+  | "chain.admin";
 
 const ADMINS: readonly PlatformRole[] = ["SUPERADMIN", "ADMIN"];
 const OPS: readonly PlatformRole[] = [...ADMINS, "OPERATIONS"];
@@ -65,6 +73,11 @@ const RULES: Record<PlatformAction, readonly PlatformRole[]> = {
   "audit.verify": ADMINS,
   "waitlist.read": STAFF,
   "waitlist.manage": OPS,
+  "tokenization.read": STAFF,
+  "tokenization.manage": OPS,
+  "chain.read": STAFF,
+  "chain.manage": OPS,
+  "chain.admin": ADMINS,
 };
 
 const PLATFORM_ROLES: readonly string[] = STAFF;
